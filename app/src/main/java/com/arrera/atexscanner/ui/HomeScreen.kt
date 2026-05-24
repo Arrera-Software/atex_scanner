@@ -1,32 +1,28 @@
 package com.arrera.atexscanner.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Business
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.arrera.atexscanner.data.Site
+import com.arrera.atexscanner.ui.viewmodel.MainViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: MainViewModel) {
+    val sites by viewModel.allSites.collectAsState()
+    var showAddDialog by remember { mutableStateOf(false) }
+    var newSiteName by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -39,10 +35,10 @@ fun HomeScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: Nouvelle inspection */ },
+                onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Nouvelle inspection")
+                Icon(Icons.Default.Add, contentDescription = "Nouveau site")
             }
         }
     ) { innerPadding ->
@@ -52,26 +48,70 @@ fun HomeScreen() {
                 .fillMaxSize()
         ) {
             Text(
-                text = "Mes Inspections",
+                text = "Mes Sites d'Inspection",
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(16.dp),
                 fontWeight = FontWeight.Bold
             )
 
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(3) { index ->
-                    InspectionCard(index)
+            if (sites.isEmpty()) {
+                Text(
+                    text = "Aucun site enregistré. Cliquez sur + pour commencer.",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(sites) { site ->
+                        SiteCard(site)
+                    }
                 }
             }
         }
     }
+
+    if (showAddDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false },
+            title = { Text("Nouveau Site") },
+            text = {
+                TextField(
+                    value = newSiteName,
+                    onValueChange = { newSiteName = it },
+                    label = { Text("Nom du site") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newSiteName.isNotBlank()) {
+                            viewModel.addSite(newSiteName)
+                            newSiteName = ""
+                            showAddDialog = false
+                        }
+                    }
+                ) {
+                    Text("Ajouter")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
 }
 
 @Composable
-fun InspectionCard(index: Int) {
+fun SiteCard(site: Site) {
+    val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    val dateString = dateFormatter.format(Date(site.dateCreation))
+
     Card(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -84,15 +124,11 @@ fun InspectionCard(index: Int) {
                 tint = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Site Industriel ${index + 1}",
+                text = site.nom,
                 style = MaterialTheme.typography.titleLarge
             )
             Text(
-                text = "Zone ATEX: Zone 1 / IIB T4",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Dernière inspection: 24/05/2024",
+                text = "Créé le : $dateString",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline
             )
