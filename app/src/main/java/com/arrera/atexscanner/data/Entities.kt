@@ -25,10 +25,10 @@ data class Site(
 data class ZoneAtex(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val siteId: Long,
-    val nom: String,
-    val classification: String,
-    val groupeGaz: String,
-    val classeTemperature: String
+    val nom: String, // ex: Gazomètre aciérie
+    val exigenceClassification: String, // ex: 2
+    val exigenceGroupe: String,         // ex: IIB
+    val exigenceTemperature: String     // ex: T1
 )
 
 @Entity(
@@ -45,13 +45,31 @@ data class ZoneAtex(
 data class Equipement(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val zoneId: Long,
-    val nom: String,
-    val marque: String,
-    val modele: String,
+    
+    // Localisation
+    val emplacement1: String, // ex: Au sol
+    val emplacement2: String, // ex: Proximité gazomètre au sud
+    
+    // Matériel
+    val tagNumber: String,
+    val typeMateriel: String,
+    val fabricant: String,
     val numeroSerie: String,
-    val protection: String,
-    val groupeMateriel: String,
-    val tempMateriel: String,
+    val indiceProtection: String,
+    val anneeFabrication: String,
+    
+    // Marquage Selon Directives
+    val dirGroupe: String,    // ex: II
+    val dirCategorie: String, // ex: 2
+    val dirAtmosphere: String, // ex: G
+    
+    // Marquage Selon Normes
+    val normeProtection: String, // ex: de
+    val normeGroupe: String,     // ex: IIB
+    val normeTemperature: String, // ex: T4
+    val normeEPL: String,        // ex: Gb
+    
+    val numeroAttestation: String,
     val photoPlaquePath: String?
 )
 
@@ -71,6 +89,7 @@ data class Inspection(
     val equipementId: Long,
     val date: Long = System.currentTimeMillis(),
     val inspecteurNom: String,
-    val isConforme: Boolean,
+    val statusConformite: String, // C, NA, NC, NE
+    val typeObservation: String,  // ex: Marquage
     val commentaires: String
 )

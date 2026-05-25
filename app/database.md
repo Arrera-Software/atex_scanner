@@ -1,72 +1,64 @@
 # Structure de la Base de Données - ATEX Scanner
 
-Ce document décrit l'organisation de la base de données locale (Room) utilisée pour stocker les informations d'inspection.
+Ce document décrit l'organisation de la base de données locale (Room) pour correspondre au rapport Excel final.
 
 ## Schéma Relationnel
-
-L'application utilise une structure hiérarchique :
 `Site` -> `ZoneATEX` -> `Equipement` -> `Inspection`
 
 ---
 
 ### 1. Table : `sites`
-Représente le lieu géographique ou industriel de l'intervention.
-
-| Champ | Type | Contrainte | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | Long | PK, Auto | Identifiant unique auto-généré. |
-| `nom` | String | Not Null | Nom du site (ex: "Usine Chimique Sud"). |
-| `dateCreation` | Long | Default | Timestamp de création (System.currentTimeMillis()). |
+| Champ | Type | Description |
+| :--- | :--- | :--- |
+| `id` | Long (PK) | Identifiant unique. |
+| `nom` | String | Nom du site client. |
+| `dateCreation` | Long | Date de création. |
 
 ---
 
-### 2. Table : `zones_atex`
-Définit les zones à risque au sein d'un site.
-
-| Champ | Type | Contrainte | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | Long | PK, Auto | Identifiant unique auto-généré. |
-| `siteId` | Long | FK (Site) | Référence vers le site parent (Cascade Delete). |
-| `nom` | String | Not Null | Nom de la zone (ex: "Local Charge Batterie"). |
-| `classification`| String | Not Null | Zone 0, 1, 2, 20, 21, 22. |
-| `groupeGaz` | String | Not Null | IIA, IIB, IIC. |
-| `classeTemperature`| String | Not Null | T1 à T6. |
+### 2. Table : `zones_atex` (Section LOCALISATION & EXIGENCE)
+| Champ | Type | Exemple |
+| :--- | :--- | :--- |
+| `id` | Long (PK) | Identifiant unique. |
+| `siteId` | Long (FK) | Lien vers le Site. |
+| `nom` | String | Gazomètre aciérie |
+| `exigenceClassification` | String | 2 |
+| `exigenceGroupe` | String | IIB |
+| `exigenceTemperature` | String | T1 |
 
 ---
 
-### 3. Table : `equipements`
-Matériels inventoriés et scannés dans une zone.
-
-| Champ | Type | Contrainte | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | Long | PK, Auto | Identifiant unique auto-généré. |
-| `zoneId` | Long | FK (Zone) | Référence vers la zone parente (Cascade Delete). |
-| `nom` | String | Not Null | Nom du matériel (ex: "Moteur Pompe 1"). |
-| `marque` | String | Not Null | Constructeur du matériel. |
-| `modele` | String | Not Null | Modèle du matériel. |
-| `numeroSerie` | String | Not Null | Identifiant unique du constructeur. |
-| `protection` | String | Not Null | Mode de protection (ex: Ex db eb). |
-| `groupeMateriel` | String | Not Null | Groupe d'explosion (ex: IIC). |
-| `tempMateriel` | String | Not Null | Température max de surface (ex: T4). |
-| `photoPlaquePath`| String | Nullable | Chemin local vers la photo de la plaque. |
-
----
-
-### 4. Table : `inspections`
-Historique des verdicts de conformité pour un équipement.
-
-| Champ | Type | Contrainte | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | Long | PK, Auto | Identifiant unique auto-généré. |
-| `equipementId` | Long | FK (Equip) | Référence vers l'équipement (Cascade Delete). |
-| `date` | Long | Default | Timestamp de l'inspection. |
-| `inspecteurNom` | String | Not Null | Nom de la personne ayant réalisé l'audit. |
-| `isConforme` | Boolean| Not Null | Résultat de l'algorithme d'adéquation. |
-| `commentaires` | String | Nullable | Notes libres sur l'état du matériel. |
+### 3. Table : `equipements` (Section MATÉRIEL & MARQUAGE)
+| Champ | Type | Exemple / Description |
+| :--- | :--- | :--- |
+| `id` | Long (PK) | Identifiant unique. |
+| `zoneId` | Long (FK) | Lien vers la Zone. |
+| `emplacement1` | String | Au sol |
+| `emplacement2` | String | Proximité gazomètre au sud |
+| `tagNumber` | String | N° TAG |
+| `typeMateriel` | String | Coffret électrique |
+| `fabricant` | String | TECHNOR |
+| `numeroSerie` | String | 112342 54 |
+| `indiceProtection`| String | IP66 |
+| `anneeFabrication`| String | 2002 |
+| `dirGroupe` | String | Directives: II |
+| `dirCategorie` | String | Directives: 2 |
+| `dirAtmosphere` | String | Directives: G |
+| `normeProtection` | String | Normes: de |
+| `normeGroupe` | String | Normes: IIB |
+| `normeTemperature`| String | Normes: T4 |
+| `normeEPL` | String | Normes: Gb |
+| `numeroAttestation`| String | LCIE 00 ATEX 6044 X |
+| `photoPlaquePath` | String | Chemin de la photo. |
 
 ---
 
-## Règles de Gestion
-- **Single Source of Truth** : Room est l'unique source de vérité.
-- **Réactivité** : Les accès en lecture utilisent des `Flow<T>` pour la mise à jour UI.
-- **Intégrité** : L'utilisation de `CASCADE DELETE` garantit qu'aucune donnée orpheline ne reste en cas de suppression d'un parent.
+### 4. Table : `inspections` (Section VERDICT)
+| Champ | Type | Exemple |
+| :--- | :--- | :--- |
+| `id` | Long (PK) | Identifiant unique. |
+| `equipementId` | Long (FK) | Lien vers l'Équipement. |
+| `date` | Long | Date de l'inspection. |
+| `statusConformite` | String | C, NA, NC, NE |
+| `typeObservation` | String | Marquage |
+| `commentaires` | String | Notes complémentaires. |
