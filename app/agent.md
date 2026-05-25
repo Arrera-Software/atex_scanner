@@ -4,40 +4,46 @@
 Créer un outil métier Android pour les inspecteurs en zone ATEX visant à automatiser et sécuriser la rédaction des rapports d'adéquation.
 L'application doit :
 - Supprimer la double saisie (terrain puis bureau).
-- Réduire les erreurs de copie.
-- Générer un rapport Excel formaté rapidement.
-- Conserver les photos prises lors de l'inspection.
+- Réduire les erreurs de saisie grâce à l'OCR.
+- Générer un rapport Excel conforme au modèle métier (Colonnes : Localisation, Zone ATEX client, Matériel, Marquage, Verdict).
+- Conserver les photos des plaques signalétiques comme preuves.
 
 ## Stack Technique & Règles de Développement
 
 - **Langage** : Kotlin.
-- **Interface Utilisateur** : Jetpack Compose exclusivement.
+- **Interface Utilisateur** : Jetpack Compose exclusivement (Material 3).
 - **Architecture de données** :
-    - Utilisation de **Room** comme base de données locale.
-    - C'est l'**unique source de vérité** (Single Source of Truth) pour l'application.
-    - Tables requises : `Site`, `ZoneATEX`, `Equipement`, et `Inspection`.
-- **Appareil Photo** : Utilisation de **CameraX** (API Google).
-- **Intelligence Artificielle (OCR)** : Utilisation de **Google ML Kit (Text Recognition)**. Le traitement d'image pour lire les plaques signalétiques doit se faire en local, instantanément sur le processeur du téléphone.
-- **Génération Excel** : Utilisation de la librairie Java **Apache POI**. Les manipulations de création de tableau et de formatage de cellules (ex: vert pour conforme, rouge pour non-conforme) doivent être faites en code Kotlin.
-- **Gestion des Fichiers** : Respect strict du Scoped Storage (Android 10+). Interdiction d'écrire silencieusement dans le stockage. Utilisation obligatoire de `Intent.ACTION_CREATE_DOCUMENT` pour laisser l'utilisateur choisir l'emplacement de sauvegarde du fichier Excel généré.
+    - **Room** (Single Source of Truth).
+    - Structure hiérarchique : `Site` > `ZoneAtex` > `Equipement` > `Inspection`.
+- **Appareil Photo** : CameraX.
+- **OCR** : Google ML Kit (Text Recognition) pour l'extraction des données de plaques.
+- **Génération Excel** : Apache POI (Formatage conditionnel : Vert/Rouge pour le verdict).
+- **Gestion des Fichiers** : Scoped Storage + `Intent.ACTION_CREATE_DOCUMENT`.
 
-## Fonctionnalités Clés à Implémenter
+## Structure de Données & Métier (Alignée sur Rapport Excel)
 
-1. **Création de dossier** : Écrans de saisie (via Jetpack Compose) pour les informations de base du lieu et de la zone ATEX.
-2. **Scan intelligent** :
-    - Déclenchement de CameraX.
-    - Capture et sauvegarde de la photo de la plaque signalétique.
-    - Extraction automatique des informations via ML Kit.
-3. **Saisie assistée et verdict** :
-    - Algorithme de comparaison entre les exigences de la zone ATEX et les caractéristiques extraites du matériel.
-    - Affichage immédiat du verdict : Conforme ou Non conforme.
-4. **Export et Sauvegarde** :
-    - Enregistrement des données de l'inspection dans la base Room.
-    - Génération du rapport `.xlsx` via Apache POI.
-    - Appel de l'intent système pour la sauvegarde du fichier.
+1. **Localisation & Exigences (ZoneAtex)** :
+    - Nom du lieu, Classification client (0, 1, 2...), Groupe Gaz, Classe de Température.
+2. **Identification Matériel (Equipement)** :
+    - Emplacement détaillé, N° TAG (obligatoire), Type, Fabricant, S/N, IP, Année.
+3. **Marquage Technique (Equipement)** :
+    - **Directives** : Groupe (II), Catégorie (2), Atmosphère (G/D).
+    - **Normes** : Protection (ex: db), Groupe (IIB), Température (T4), EPL (Gb).
+    - N° d'attestation d'examen de type.
+4. **Verdict (Inspection)** :
+    - Status : **C** (Conforme), **NA** (Non Applicable), **NC** (Non Conforme), **NE** (Non Examiné).
+    - Type d'observation (Marquage, État, etc.).
 
-## Contraintes Matérielles Cibles (Pour optimisation)
-- **RAM** : Le code doit être optimisé pour fonctionner sur des appareils avec 4 à 6 Go de RAM, particulièrement lors de l'utilisation simultanée de CameraX, ML Kit et Apache POI, pour éviter les OutOfMemoryExceptions.
-- **Version Android** : Le `minSdkVersion` doit être au minimum à 26 (Android 8.0), avec un ciblage optimisé pour Android 10+ (API 29+) pour la gestion des fichiers et les performances de l'IA.
-- **Focus Camera** : Assurer une configuration optimale de l'autofocus via CameraX (et forcer le flash si nécessaire) car la qualité de l'OCR (ML Kit) en dépend à 90%.
-- **Poids** : L'application doit rester légère (< 100 Mo base de données incluse).
+## Fonctionnalités Clés
+
+1. **Gestion Hiérarchique** : Navigation fluide de la liste des sites vers les zones, puis vers les équipements.
+2. **Scan intelligent & Récupération de données (Priorité Actuelle)** :
+    - Capture photo + OCR.
+    - **Focus actuel** : Extraction fiable et structurée de toutes les informations des plaques signalétiques (TAG, Fabricant, S/N, Marquages Directives et Normes).
+    - **Évolution future** : L'algorithme de comparaison automatique (Verdict C/NC) sera implémenté dans une phase ultérieure. Pour le moment, l'inspecteur saisit ou valide les données extraites.
+3. **Export Professionnel** : Génération instantanée du fichier `.xlsx` respectant strictement le colonnage du tableau de référence.
+
+## Contraintes d'Optimisation
+- **Performance** : Gestion rigoureuse de la mémoire (RAM 4-6 Go) lors de l'usage simultané de la caméra et de l'OCR.
+- **Qualité OCR** : Configuration CameraX optimisée pour la macro (mise au point sur plaques signalétiques).
+- **Version Android** : Min SDK 26, Target SDK 35/36.
