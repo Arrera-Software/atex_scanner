@@ -8,6 +8,9 @@ interface ScannerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSite(site: Site): Long
 
+    @Delete
+    suspend fun deleteSite(site: Site)
+
     @Query("SELECT * FROM sites ORDER BY dateCreation DESC")
     fun getAllSites(): Flow<List<Site>>
 

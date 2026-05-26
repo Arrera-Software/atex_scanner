@@ -86,6 +86,13 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
         return repository.insertSite(Site(nom = nom))
     }
 
+    // Supprimer un site
+    fun deleteSite(siteId: Long, nom: String) {
+        viewModelScope.launch {
+            repository.deleteSite(Site(id = siteId, nom = nom))
+        }
+    }
+
     // Récupérer les zones d'un site
     fun getZonesBySite(siteId: Long): StateFlow<List<ZoneAtex>> {
         return repository.getZonesBySite(siteId).stateIn(

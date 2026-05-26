@@ -34,6 +34,7 @@ fun ZoneListScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var zoneToEdit by remember { mutableStateOf<ZoneAtex?>(null) }
     var zoneToDelete by remember { mutableStateOf<ZoneAtex?>(null) }
+    var showDeleteSiteDialog by remember { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -47,6 +48,15 @@ fun ZoneListScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showDeleteSiteDialog = true }) {
+                        Icon(
+                            Icons.Default.Delete, 
+                            contentDescription = "Supprimer le site",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -157,6 +167,31 @@ fun ZoneListScreen(
             },
             dismissButton = {
                 TextButton(onClick = { zoneToDelete = null }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+
+    if (showDeleteSiteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteSiteDialog = false },
+            title = { Text("Supprimer le site") },
+            text = { Text("Êtes-vous sûr de vouloir supprimer le site '$siteNom' ? Cela supprimera TOUTES les zones, équipements et inspections de ce site. Cette action est irréversible.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteSite(siteId, siteNom)
+                        showDeleteSiteDialog = false
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Supprimer définitivement")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteSiteDialog = false }) {
                     Text("Annuler")
                 }
             }
