@@ -14,7 +14,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.arrera.atexscanner.ui.HomeScreen
+import com.arrera.atexscanner.ui.screens.camera.CameraScreen
 import com.arrera.atexscanner.ui.screens.equipment.EquipmentListScreen
+import com.arrera.atexscanner.ui.screens.ocr.OcrResultScreen
 import com.arrera.atexscanner.ui.screens.zone.ZoneListScreen
 import com.arrera.atexscanner.ui.theme.ATEXScannerTheme
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
@@ -23,7 +25,8 @@ import com.arrera.atexscanner.ui.viewmodel.MainViewModelFactory
 class MainActivity : ComponentActivity() {
     
     private val viewModel: MainViewModel by viewModels {
-        MainViewModelFactory((application as AtexScannerApplication).repository)
+        val app = application as AtexScannerApplication
+        MainViewModelFactory(app.repository, app.ocrProcessor)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,7 +83,38 @@ class MainActivity : ComponentActivity() {
                                 zoneId = zoneId,
                                 zoneNom = zoneNom,
                                 viewModel = viewModel,
-                                onBack = { navController.popBackStack() }
+                                onBack = { navController.popBackStack() },
+                                onLaunchCamera = { tag ->
+                                    viewModel.setPendingTagAndZone(tag, zoneId)
+                                    navController.navigate("camera")
+                                },
+                                onImageSelected = { tag, uri ->
+                                    viewModel.setPendingTagAndZone(tag, zoneId)
+                                    viewModel.processImage(uri) {
+                                        navController.navigate("ocr_result")
+                                    }
+                                }
+                            )
+                        }
+                        composable("camera") {
+                            CameraScreen(
+                                onImageCaptured = { uri ->
+                                    viewModel.processImage(uri) {
+                                        navController.navigate("ocr_result") {
+                                            popUpTo("equipments/{zoneId}/{zoneNom}")
+                                        }
+                                    }
+                                },
+                                onError = { /* Gérer l'erreur */ }
+                            )
+                        }
+                        composable("ocr_result") {
+                            OcrResultScreen(
+                                viewModel = viewModel,
+                                onBack = { navController.popBackStack() },
+                                onSave = {
+                                    navController.popBackStack()
+                                }
                             )
                         }
                     }

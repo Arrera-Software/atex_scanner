@@ -7,12 +7,72 @@ import com.arrera.atexscanner.data.ScannerRepository
 import com.arrera.atexscanner.data.Site
 import com.arrera.atexscanner.data.ZoneAtex
 import com.arrera.atexscanner.data.Equipement
+import com.arrera.atexscanner.utils.OCRProcessor
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val repository: ScannerRepository) : ViewModel() {
+class MainViewModel(private val repository: ScannerRepository, private val ocrProcessor: OCRProcessor) : ViewModel() {
+
+    // État pour l'équipement en cours de création via OCR
+    var pendingEquipement by mutableStateOf<Equipement?>(null)
+        private set
+
+    fun setPendingTagAndZone(tag: String, zoneId: Long) {
+        pendingEquipement = Equipement(
+            zoneId = zoneId,
+            tagNumber = tag,
+            emplacement1 = "",
+            emplacement2 = "",
+            typeMateriel = "",
+            fabricant = "",
+            numeroSerie = "",
+            indiceProtection = "",
+            anneeFabrication = "",
+            dirGroupe = "",
+            dirCategorie = "",
+            dirAtmosphere = "",
+            normeProtection = "",
+            normeGroupe = "",
+            normeTemperature = "",
+            normeEPL = "",
+            numeroAttestation = "",
+            photoPlaquePath = null
+        )
+    }
+
+    fun processImage(uri: Uri, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            val rawText = ocrProcessor.extractText(uri)
+            val extractedData = ocrProcessor.parseAtexData(rawText)
+            
+            pendingEquipement = pendingEquipement?.copy(
+                numeroSerie = extractedData["sn"] ?: "",
+                indiceProtection = extractedData["ip"] ?: "",
+                photoPlaquePath = uri.toString()
+                // ... remplir les autres champs extraits
+            )
+            onComplete()
+        }
+    }
+
+    fun saveEquipement() {
+        pendingEquipement?.let {
+            viewModelScope.launch {
+                repository.insertEquipement(it)
+                pendingEquipement = null
+            }
+        }
+    }
+
+    fun updatePendingEquipement(equipement: Equipement) {
+        pendingEquipement = equipement
+    }
 
     // Récupère tous les sites et les expose sous forme de StateFlow pour Compose
     val allSites: StateFlow<List<Site>> = repository.allSites.stateIn(
@@ -75,11 +135,14 @@ class MainViewModel(private val repository: ScannerRepository) : ViewModel() {
 }
 
 // Factory pour instancier le ViewModel avec le Repository
-class MainViewModelFactory(private val repository: ScannerRepository) : ViewModelProvider.Factory {
+class MainViewModelFactory(
+    private val repository: ScannerRepository,
+    private val ocrProcessor: OCRProcessor
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository) as T
+            return MainViewModel(repository, ocrProcessor) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
