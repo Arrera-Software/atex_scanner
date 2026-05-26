@@ -132,6 +132,20 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
             initialValue = emptyList()
         )
     }
+
+    // Modifier un équipement
+    fun updateEquipement(equipement: Equipement) {
+        viewModelScope.launch {
+            repository.updateEquipement(equipement)
+        }
+    }
+
+    // Supprimer un équipement
+    fun deleteEquipement(equipement: Equipement) {
+        viewModelScope.launch {
+            repository.deleteEquipement(equipement)
+        }
+    }
 }
 
 // Factory pour instancier le ViewModel avec le Repository

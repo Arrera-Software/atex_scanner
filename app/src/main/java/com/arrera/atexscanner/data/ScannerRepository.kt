@@ -37,6 +37,14 @@ class ScannerRepository(private val scannerDao: ScannerDao) {
         return scannerDao.insertEquipement(equipement)
     }
 
+    suspend fun updateEquipement(equipement: Equipement) {
+        scannerDao.updateEquipement(equipement)
+    }
+
+    suspend fun deleteEquipement(equipement: Equipement) {
+        scannerDao.deleteEquipement(equipement)
+    }
+
     // --- Inspections ---
     fun getInspectionsByEquipement(equipementId: Long): Flow<List<Inspection>> {
         return scannerDao.getInspectionsByEquipement(equipementId)

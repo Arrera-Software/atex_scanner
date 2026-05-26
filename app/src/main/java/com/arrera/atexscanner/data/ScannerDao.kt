@@ -26,6 +26,12 @@ interface ScannerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEquipement(equipement: Equipement): Long
 
+    @Update
+    suspend fun updateEquipement(equipement: Equipement)
+
+    @Delete
+    suspend fun deleteEquipement(equipement: Equipement)
+
     @Query("SELECT * FROM equipements WHERE zoneId = :zoneId")
     fun getEquipementsByZone(zoneId: Long): Flow<List<Equipement>>
 

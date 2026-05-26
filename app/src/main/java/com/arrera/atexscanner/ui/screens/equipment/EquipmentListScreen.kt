@@ -4,28 +4,37 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
 import com.arrera.atexscanner.data.Equipement
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,9 +49,22 @@ fun EquipmentListScreen(
     val equipmentsFlow = remember(zoneId) { viewModel.getEquipementsByZone(zoneId) }
     val equipments by equipmentsFlow.collectAsState(initial = emptyList())
     
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp
+    
+    val columns = when {
+        screenWidth >= 1200 -> 3
+        screenWidth >= 600 -> 2
+        else -> 1
+    }
+
     var showTagDialog by remember { mutableStateOf(false) }
     var showSourceDialog by remember { mutableStateOf(false) }
     var equipmentTag by remember { mutableStateOf("") }
+    
+    var equipmentToEdit by remember { mutableStateOf<Equipement?>(null) }
+    var equipmentToDelete by remember { mutableStateOf<Equipement?>(null) }
+    var fullScreenImagePath by remember { mutableStateOf<String?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -81,16 +103,27 @@ fun EquipmentListScreen(
             }
         }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (equipments.isEmpty()) {
-                    EmptyState()
-                } else {
-                    EquipmentTable(equipments)
+            if (equipments.isEmpty()) {
+                EmptyState()
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columns),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(equipments) { equipment ->
+                        EquipmentCard(
+                            equipment = equipment,
+                            onEdit = { equipmentToEdit = equipment }
+                        )
+                    }
                 }
             }
         }
@@ -162,6 +195,165 @@ fun EquipmentListScreen(
             }
         )
     }
+
+    if (equipmentToEdit != null) {
+        EquipmentEditDialog(
+            equipment = equipmentToEdit!!,
+            onDismiss = { equipmentToEdit = null },
+            onConfirm = { updatedEquip ->
+                viewModel.updateEquipement(updatedEquip)
+                equipmentToEdit = null
+            },
+            onDelete = {
+                equipmentToDelete = equipmentToEdit
+                equipmentToEdit = null
+            },
+            onImageClick = { path -> fullScreenImagePath = path }
+        )
+    }
+
+    if (fullScreenImagePath != null) {
+        FullScreenImageDialog(
+            photoPath = fullScreenImagePath!!,
+            onDismiss = { fullScreenImagePath = null }
+        )
+    }
+
+    if (equipmentToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { equipmentToDelete = null },
+            title = { Text("Supprimer l'équipement") },
+            text = { Text("Êtes-vous sûr de vouloir supprimer l'équipement '${equipmentToDelete!!.tagNumber}' ?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteEquipement(equipmentToDelete!!)
+                        equipmentToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Supprimer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { equipmentToDelete = null }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun EquipmentEditDialog(
+    equipment: Equipement,
+    onDismiss: () -> Unit,
+    onConfirm: (Equipement) -> Unit,
+    onDelete: () -> Unit,
+    onImageClick: (String) -> Unit
+) {
+    var tag by remember { mutableStateOf(equipment.tagNumber) }
+    var fabricant by remember { mutableStateOf(equipment.fabricant) }
+    var type by remember { mutableStateOf(equipment.typeMateriel) }
+    var sn by remember { mutableStateOf(equipment.numeroSerie) }
+    var ip by remember { mutableStateOf(equipment.indiceProtection) }
+    var annee by remember { mutableStateOf(equipment.anneeFabrication) }
+    
+    var dirGr by remember { mutableStateOf(equipment.dirGroupe) }
+    var dirCat by remember { mutableStateOf(equipment.dirCategorie) }
+    var dirAtmo by remember { mutableStateOf(equipment.dirAtmosphere) }
+    
+    var normProt by remember { mutableStateOf(equipment.normeProtection) }
+    var normGr by remember { mutableStateOf(equipment.normeGroupe) }
+    var normT by remember { mutableStateOf(equipment.normeTemperature) }
+    var normEPL by remember { mutableStateOf(equipment.normeEPL) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Modifier l'équipement")
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Affichage de la photo cliquable pour vérification
+                equipment.photoPlaquePath?.let { path ->
+                    AsyncImage(
+                        model = path,
+                        contentDescription = "Photo de la plaque",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .padding(bottom = 8.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
+                            .clickable { onImageClick(path) }
+                    )
+                }
+
+                OutlinedTextField(value = tag, onValueChange = { tag = it }, label = { Text("N° TAG") })
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.weight(1f))
+                }
+                OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("S/N") }, modifier = Modifier.fillMaxWidth())
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("IP") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année") }, modifier = Modifier.weight(1f))
+                }
+                
+                Text("Marquage Directives", style = MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(value = dirGr, onValueChange = { dirGr = it }, label = { Text("Gr") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = dirCat, onValueChange = { dirCat = it }, label = { Text("Cat") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = dirAtmo, onValueChange = { dirAtmo = it }, label = { Text("Atmo") }, modifier = Modifier.weight(1f))
+                }
+                
+                Text("Marquage Normes", style = MaterialTheme.typography.titleSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(value = normProt, onValueChange = { normProt = it }, label = { Text("Prot") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = normGr, onValueChange = { normGr = it }, label = { Text("Gr") }, modifier = Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    OutlinedTextField(value = normT, onValueChange = { normT = it }, label = { Text("T") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = normEPL, onValueChange = { normEPL = it }, label = { Text("EPL") }, modifier = Modifier.weight(1f))
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(equipment.copy(
+                    tagNumber = tag,
+                    fabricant = fabricant,
+                    typeMateriel = type,
+                    numeroSerie = sn,
+                    indiceProtection = ip,
+                    anneeFabrication = annee,
+                    dirGroupe = dirGr,
+                    dirCategorie = dirCat,
+                    dirAtmosphere = dirAtmo,
+                    normeProtection = normProt,
+                    normeGroupe = normGr,
+                    normeTemperature = normT,
+                    normeEPL = normEPL
+                ))
+            }) { Text("Enregistrer") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Annuler") }
+        }
+    )
 }
 
 @Composable
@@ -186,80 +378,97 @@ fun EmptyState() {
 }
 
 @Composable
-fun EquipmentTable(equipments: List<Equipement>) {
-    val scrollState = rememberScrollState()
-    
-    Column(modifier = Modifier.horizontalScroll(scrollState)) {
-        TableHeader()
-        LazyColumn(modifier = Modifier.fillMaxHeight()) {
-            items(equipments) { equipment ->
-                TableRow(equipment)
-                HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "TAG: ${equipment.tagNumber}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Modifier", tint = MaterialTheme.colorScheme.primary)
+                }
             }
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), thickness = 0.5.dp)
+            
+            DetailRow("Type", equipment.typeMateriel)
+            DetailRow("Fabricant", equipment.fabricant)
+            DetailRow("S/N", equipment.numeroSerie)
+            DetailRow("IP", equipment.indiceProtection)
+            DetailRow("Année", equipment.anneeFabrication)
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Marquage Directives", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "${equipment.dirGroupe} ${equipment.dirCategorie}${equipment.dirAtmosphere}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Marquage Normes", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "${equipment.normeProtection} ${equipment.normeGroupe} ${equipment.normeTemperature} ${equipment.normeEPL}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
 @Composable
-fun TableHeader() {
-    Row(
-        modifier = Modifier
-            .background(Color.DarkGray)
-            .padding(vertical = 8.dp)
-    ) {
-        TableCell("N° TAG", 100.dp, isHeader = true)
-        TableCell("Type", 120.dp, isHeader = true)
-        TableCell("Fabricant", 120.dp, isHeader = true)
-        TableCell("S/N", 120.dp, isHeader = true)
-        TableCell("IP", 60.dp, isHeader = true)
-        TableCell("Année", 70.dp, isHeader = true)
-        TableCell("Dir. (Gr/Cat/Atm)", 130.dp, isHeader = true)
-        TableCell("Norme (Prot/Gr/T/EPL)", 160.dp, isHeader = true)
-        TableCell("Verdict", 80.dp, isHeader = true)
-    }
-}
-
-@Composable
-fun TableRow(equipment: Equipement) {
-    Row(
-        modifier = Modifier.padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TableCell(equipment.tagNumber, 100.dp)
-        TableCell(equipment.typeMateriel, 120.dp)
-        TableCell(equipment.fabricant, 120.dp)
-        TableCell(equipment.numeroSerie, 120.dp)
-        TableCell(equipment.indiceProtection, 60.dp)
-        TableCell(equipment.anneeFabrication, 70.dp)
-        TableCell("${equipment.dirGroupe} ${equipment.dirCategorie}${equipment.dirAtmosphere}", 130.dp)
-        TableCell("${equipment.normeProtection} ${equipment.normeGroupe} ${equipment.normeTemperature} ${equipment.normeEPL}", 160.dp)
-        
+fun DetailRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
         Text(
-            text = "C",
-            modifier = Modifier.width(80.dp).padding(4.dp),
-            textAlign = TextAlign.Center,
-            color = Color(0xFF2E7D32),
-            fontWeight = FontWeight.Bold
+            text = "$label : ",
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(80.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
 
 @Composable
-fun TableCell(
-    text: String,
-    width: androidx.compose.ui.unit.Dp,
-    isHeader: Boolean = false
-) {
-    Text(
-        text = text,
-        modifier = Modifier
-            .width(width)
-            .padding(horizontal = 8.dp),
-        style = if (isHeader) 
-            androidx.compose.ui.text.TextStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp) 
-        else 
-            androidx.compose.ui.text.TextStyle(fontSize = 12.sp),
-        textAlign = TextAlign.Start,
-        maxLines = 2
-    )
+fun FullScreenImageDialog(photoPath: String, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable { onDismiss() }
+        ) {
+            AsyncImage(
+                model = photoPath,
+                contentDescription = "Photo plein écran",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+            
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.extraLarge)
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Fermer", tint = Color.White)
+            }
+        }
+    }
 }

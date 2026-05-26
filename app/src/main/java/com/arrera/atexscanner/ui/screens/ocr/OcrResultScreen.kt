@@ -1,15 +1,24 @@
 package com.arrera.atexscanner.ui.screens.ocr
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil.compose.AsyncImage
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,6 +33,8 @@ fun OcrResultScreen(
         onBack()
         return
     }
+
+    var showFullScreenImage by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -53,6 +64,21 @@ fun OcrResultScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Affichage de la photo de la plaque pour vérification
+            equipment.photoPlaquePath?.let { path ->
+                AsyncImage(
+                    model = path,
+                    contentDescription = "Photo de la plaque",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .padding(bottom = 8.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
+                        .clickable { showFullScreenImage = true }
+                )
+            }
+
             Text("Vérifiez et complétez les informations extraites de la plaque.", style = MaterialTheme.typography.bodyMedium)
             
             OutlinedTextField(
@@ -161,6 +187,45 @@ fun OcrResultScreen(
                 Icon(Icons.Default.Check, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Valider l'équipement")
+            }
+        }
+    }
+
+    if (showFullScreenImage && equipment.photoPlaquePath != null) {
+        FullScreenImageDialog(
+            photoPath = equipment.photoPlaquePath!!,
+            onDismiss = { showFullScreenImage = false }
+        )
+    }
+}
+
+@Composable
+fun FullScreenImageDialog(photoPath: String, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+                .clickable { onDismiss() }
+        ) {
+            AsyncImage(
+                model = photoPath,
+                contentDescription = "Photo plein écran",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Fit
+            )
+            
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.extraLarge)
+            ) {
+                Icon(Icons.Default.Close, contentDescription = "Fermer", tint = Color.White)
             }
         }
     }
