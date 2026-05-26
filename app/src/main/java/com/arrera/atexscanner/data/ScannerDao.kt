@@ -14,6 +14,12 @@ interface ScannerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertZone(zone: ZoneAtex): Long
 
+    @Update
+    suspend fun updateZone(zone: ZoneAtex)
+
+    @Delete
+    suspend fun deleteZone(zone: ZoneAtex)
+
     @Query("SELECT * FROM zones_atex WHERE siteId = :siteId")
     fun getZonesBySite(siteId: Long): Flow<List<ZoneAtex>>
 

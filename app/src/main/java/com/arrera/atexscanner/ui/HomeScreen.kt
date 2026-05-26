@@ -1,5 +1,6 @@
 package com.arrera.atexscanner.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,15 +14,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.arrera.atexscanner.data.Site
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: MainViewModel) {
+fun HomeScreen(
+    viewModel: MainViewModel,
+    onSiteClick: (Site) -> Unit,
+    onSiteAdded: (Long, String) -> Unit
+) {
     val sites by viewModel.allSites.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var newSiteName by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -66,7 +73,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(sites) { site ->
-                        SiteCard(site)
+                        SiteCard(site = site, onClick = { onSiteClick(site) })
                     }
                 }
             }
@@ -89,9 +96,13 @@ fun HomeScreen(viewModel: MainViewModel) {
                 Button(
                     onClick = {
                         if (newSiteName.isNotBlank()) {
-                            viewModel.addSite(newSiteName)
-                            newSiteName = ""
-                            showAddDialog = false
+                            val name = newSiteName
+                            scope.launch {
+                                val id = viewModel.addSite(name)
+                                onSiteAdded(id, name)
+                                newSiteName = ""
+                                showAddDialog = false
+                            }
                         }
                     }
                 ) {
@@ -108,12 +119,14 @@ fun HomeScreen(viewModel: MainViewModel) {
 }
 
 @Composable
-fun SiteCard(site: Site) {
+fun SiteCard(site: Site, onClick: () -> Unit) {
     val dateFormatter = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
     val dateString = dateFormatter.format(Date(site.dateCreation))
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
