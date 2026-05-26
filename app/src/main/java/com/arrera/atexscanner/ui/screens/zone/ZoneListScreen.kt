@@ -1,5 +1,6 @@
 package com.arrera.atexscanner.ui.screens.zone
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,7 +25,8 @@ fun ZoneListScreen(
     siteId: Long,
     siteNom: String,
     viewModel: MainViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onZoneClick: (ZoneAtex) -> Unit
 ) {
     val zonesFlow = remember(siteId) { viewModel.getZonesBySite(siteId) }
     val zones by zonesFlow.collectAsState()
@@ -95,7 +97,8 @@ fun ZoneListScreen(
                     items(zones) { zone ->
                         ZoneCard(
                             zone = zone,
-                            onEdit = { zoneToEdit = zone }
+                            onEdit = { zoneToEdit = zone },
+                            onClick = { onZoneClick(zone) }
                         )
                     }
                 }
@@ -242,8 +245,12 @@ fun ZoneDialog(
 }
 
 @Composable
-fun ZoneCard(zone: ZoneAtex, onEdit: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun ZoneCard(zone: ZoneAtex, onEdit: () -> Unit, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically

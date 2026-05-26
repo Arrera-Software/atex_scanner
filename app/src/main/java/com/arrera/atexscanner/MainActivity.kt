@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.arrera.atexscanner.ui.HomeScreen
+import com.arrera.atexscanner.ui.screens.equipment.EquipmentListScreen
 import com.arrera.atexscanner.ui.screens.zone.ZoneListScreen
 import com.arrera.atexscanner.ui.theme.ATEXScannerTheme
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
@@ -59,6 +60,25 @@ class MainActivity : ComponentActivity() {
                             ZoneListScreen(
                                 siteId = siteId,
                                 siteNom = siteNom,
+                                viewModel = viewModel,
+                                onBack = { navController.popBackStack() },
+                                onZoneClick = { zone ->
+                                    navController.navigate("equipments/${zone.id}/${zone.nom}")
+                                }
+                            )
+                        }
+                        composable(
+                            route = "equipments/{zoneId}/{zoneNom}",
+                            arguments = listOf(
+                                navArgument("zoneId") { type = NavType.LongType },
+                                navArgument("zoneNom") { type = NavType.StringType }
+                            )
+                        ) { backStackEntry ->
+                            val zoneId = backStackEntry.arguments?.getLong("zoneId") ?: 0L
+                            val zoneNom = backStackEntry.arguments?.getString("zoneNom") ?: ""
+                            EquipmentListScreen(
+                                zoneId = zoneId,
+                                zoneNom = zoneNom,
                                 viewModel = viewModel,
                                 onBack = { navController.popBackStack() }
                             )

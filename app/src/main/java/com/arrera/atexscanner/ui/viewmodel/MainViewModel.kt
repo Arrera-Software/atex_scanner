@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.arrera.atexscanner.data.ScannerRepository
 import com.arrera.atexscanner.data.Site
 import com.arrera.atexscanner.data.ZoneAtex
+import com.arrera.atexscanner.data.Equipement
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -61,6 +62,15 @@ class MainViewModel(private val repository: ScannerRepository) : ViewModel() {
         viewModelScope.launch {
             repository.deleteZone(zone)
         }
+    }
+
+    // Récupérer les équipements d'une zone
+    fun getEquipementsByZone(zoneId: Long): StateFlow<List<Equipement>> {
+        return repository.getEquipementsByZone(zoneId).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
     }
 }
 
