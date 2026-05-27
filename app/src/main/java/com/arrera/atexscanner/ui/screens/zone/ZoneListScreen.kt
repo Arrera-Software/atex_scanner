@@ -9,6 +9,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,6 +52,13 @@ fun ZoneListScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { /* TODO: Action export */ }) {
+                        Icon(
+                            Icons.Default.FileDownload,
+                            contentDescription = "Exporter en Excel",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = { showDeleteSiteDialog = true }) {
                         Icon(
                             Icons.Default.Delete, 
