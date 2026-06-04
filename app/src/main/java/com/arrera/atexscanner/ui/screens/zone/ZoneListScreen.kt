@@ -223,6 +223,10 @@ fun ZoneDialog(
     var groupe by remember { mutableStateOf(initialGroupe) }
     var temperature by remember { mutableStateOf(initialTemp) }
 
+    val classificationOptions = listOf("0", "1", "2", "20", "21", "22")
+    val groupeOptions = listOf("IIA", "IIB", "IIC", "IIIA", "IIIB", "IIIC")
+    val tempOptions = listOf("T1", "T2", "T3", "T4", "T5", "T6")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { 
@@ -251,23 +255,26 @@ fun ZoneDialog(
                     label = { Text("Nom") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = classification,
-                    onValueChange = { classification = it },
-                    label = { Text("Classification") },
+                AtexDropdown(
+                    label = "Classification",
+                    options = classificationOptions,
+                    selectedOption = classification,
+                    onOptionSelected = { classification = it },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = groupe,
-                        onValueChange = { groupe = it },
-                        label = { Text("Groupe") },
+                    AtexDropdown(
+                        label = "Groupe",
+                        options = groupeOptions,
+                        selectedOption = groupe,
+                        onOptionSelected = { groupe = it },
                         modifier = Modifier.weight(1f)
                     )
-                    OutlinedTextField(
-                        value = temperature,
-                        onValueChange = { temperature = it },
-                        label = { Text("Temp") },
+                    AtexDropdown(
+                        label = "Temp",
+                        options = tempOptions,
+                        selectedOption = temperature,
+                        onOptionSelected = { temperature = it },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -315,6 +322,49 @@ fun ZoneCard(zone: ZoneAtex, onEdit: () -> Unit, onClick: () -> Unit) {
             }
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = "Modifier", tint = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AtexDropdown(
+    label: String,
+    options: List<String>,
+    selectedOption: String,
+    onOptionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selectedOption,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option) },
+                    onClick = {
+                        onOptionSelected(option)
+                        expanded = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
             }
         }
     }
