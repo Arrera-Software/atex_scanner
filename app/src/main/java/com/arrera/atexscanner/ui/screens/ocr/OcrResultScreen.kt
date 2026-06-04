@@ -90,23 +90,84 @@ fun OcrResultScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
+                    value = equipment.emplacement1,
+                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(emplacement1 = it)) },
+                    label = { Text("Section") },
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = equipment.emplacement2,
+                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(emplacement2 = it)) },
+                    label = { Text("Sous-section") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                var expandedNature by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedNature,
+                    onExpandedChange = { expandedNature = !expandedNature },
+                    modifier = Modifier.weight(1.2f)
+                ) {
+                    OutlinedTextField(
+                        value = equipment.nature,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Nature") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedNature) },
+                        modifier = Modifier.menuAnchor(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedNature,
+                        onDismissRequest = { expandedNature = false }
+                    ) {
+                        listOf("Électrique", "Mécanique").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(nature = option))
+                                    expandedNature = false
+                                }
+                            )
+                        }
+                    }
+                }
+                OutlinedTextField(
+                    value = equipment.quantite,
+                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(quantite = it)) },
+                    label = { Text("Qté") },
+                    modifier = Modifier.weight(0.8f)
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
                     value = equipment.fabricant,
                     onValueChange = { viewModel.updatePendingEquipement(equipment.copy(fabricant = it)) },
-                    label = { Text("Fabricant") },
+                    label = { Text("Fabricant / Marque") },
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = equipment.typeMateriel,
                     onValueChange = { viewModel.updatePendingEquipement(equipment.copy(typeMateriel = it)) },
-                    label = { Text("Type") },
+                    label = { Text("Type / Modèle") },
                     modifier = Modifier.weight(1f)
                 )
             }
 
             OutlinedTextField(
+                value = equipment.numeroAttestation,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it)) },
+                label = { Text("N° de certificat / Attestation") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
                 value = equipment.numeroSerie,
                 onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroSerie = it)) },
-                label = { Text("Numéro de série") },
+                label = { Text("N° de Série (S/N)") },
                 modifier = Modifier.fillMaxWidth()
             )
 

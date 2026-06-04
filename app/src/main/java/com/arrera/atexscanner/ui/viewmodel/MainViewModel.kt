@@ -26,23 +26,7 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
     fun setPendingTagAndZone(tag: String, zoneId: Long) {
         pendingEquipement = Equipement(
             zoneId = zoneId,
-            tagNumber = tag,
-            emplacement1 = "",
-            emplacement2 = "",
-            typeMateriel = "",
-            fabricant = "",
-            numeroSerie = "",
-            indiceProtection = "",
-            anneeFabrication = "",
-            dirGroupe = "",
-            dirCategorie = "",
-            dirAtmosphere = "",
-            normeProtection = "",
-            normeGroupe = "",
-            normeTemperature = "",
-            normeEPL = "",
-            numeroAttestation = "",
-            photoPlaquePath = null
+            tagNumber = tag
         )
     }
 
@@ -138,6 +122,13 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+    }
+
+    // Ajouter un équipement
+    fun addEquipement(equipement: Equipement) {
+        viewModelScope.launch {
+            repository.insertEquipement(equipement)
+        }
     }
 
     // Modifier un équipement

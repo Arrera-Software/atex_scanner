@@ -25,10 +25,10 @@ data class Site(
 data class ZoneAtex(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val siteId: Long,
-    val nom: String, // ex: Gazomètre aciérie
-    val exigenceClassification: String, // ex: 2
-    val exigenceGroupe: String,         // ex: IIB
-    val exigenceTemperature: String     // ex: T1
+    val nom: String = "", 
+    val exigenceClassification: String = "2",
+    val exigenceGroupe: String = "IIB",
+    val exigenceTemperature: String = "T4"
 )
 
 @Entity(
@@ -47,30 +47,33 @@ data class Equipement(
     val zoneId: Long,
     
     // Localisation
-    val emplacement1: String, // ex: Au sol
-    val emplacement2: String, // ex: Proximité gazomètre au sud
+    val emplacement1: String = "",
+    val emplacement2: String = "",
     
     // Matériel
-    val tagNumber: String,
-    val typeMateriel: String,
-    val fabricant: String,
-    val numeroSerie: String,
-    val indiceProtection: String,
-    val anneeFabrication: String,
+    val tagNumber: String = "",
+    val typeMateriel: String = "",
+    val fabricant: String = "",
+    val numeroSerie: String = "",
+    val indiceProtection: String = "",
+    val anneeFabrication: String = "",
     
     // Marquage Selon Directives
-    val dirGroupe: String,    // ex: II
-    val dirCategorie: String, // ex: 2
-    val dirAtmosphere: String, // ex: G
+    val dirGroupe: String = "",
+    val dirCategorie: String = "",
+    val dirAtmosphere: String = "",
     
     // Marquage Selon Normes
-    val normeProtection: String, // ex: de
-    val normeGroupe: String,     // ex: IIB
-    val normeTemperature: String, // ex: T4
-    val normeEPL: String,        // ex: Gb
+    val normeProtection: String = "",
+    val normeGroupe: String = "",
+    val normeTemperature: String = "",
+    val normeEPL: String = "",
     
-    val numeroAttestation: String,
-    val photoPlaquePath: String?
+    val nature: String = "Électrique",
+    val quantite: String = "1",
+    
+    val numeroAttestation: String = "",
+    val photoPlaquePath: String? = null
 )
 
 @Entity(
@@ -88,8 +91,17 @@ data class Inspection(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val equipementId: Long,
     val date: Long = System.currentTimeMillis(),
-    val inspecteurNom: String,
-    val statusConformite: String, // C, NA, NC, NE
-    val typeObservation: String,  // ex: Marquage
-    val commentaires: String
+    val inspecteurNom: String = "",
+    
+    // Adéquation & Remarques (colonnes Excel)
+    val conformiteAtex: String = "OUI",
+    val commentaires: String = "",
+    val assistanceMiseConformite: String = "",
+    
+    val marquageRemarques: String = "",
+    val presseEtoupes: String = "Conforme",
+    val miseAlaTerre: String = "Conforme",
+    val gainesCables: String = "Conforme",
+    val boitierEnveloppe: String = "Conforme",
+    val autres: String = ""
 )

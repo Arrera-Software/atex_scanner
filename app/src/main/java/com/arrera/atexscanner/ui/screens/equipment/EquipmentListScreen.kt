@@ -34,7 +34,6 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.arrera.atexscanner.data.Equipement
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
-import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +64,7 @@ fun EquipmentListScreen(
     var equipmentToEdit by remember { mutableStateOf<Equipement?>(null) }
     var equipmentToDelete by remember { mutableStateOf<Equipement?>(null) }
     var fullScreenImagePath by remember { mutableStateOf<String?>(null) }
+    var showManualAddDialog by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -134,12 +134,26 @@ fun EquipmentListScreen(
             onDismissRequest = { showTagDialog = false },
             title = { Text("Identification du matériel") },
             text = {
-                OutlinedTextField(
-                    value = equipmentTag,
-                    onValueChange = { equipmentTag = it },
-                    label = { Text("N° TAG (Obligatoire)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = equipmentTag,
+                        onValueChange = { equipmentTag = it },
+                        label = { Text("N° TAG (Obligatoire pour photo)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            showTagDialog = false
+                            showManualAddDialog = true
+                        }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Saisie Manuelle (sans photo)")
+                    }
+                }
             },
             confirmButton = {
                 Button(
@@ -148,8 +162,9 @@ fun EquipmentListScreen(
                             showTagDialog = false
                             showSourceDialog = true
                         }
-                    }
-                ) { Text("Continuer") }
+                    },
+                    enabled = equipmentTag.isNotBlank()
+                ) { Text("Continuer vers Photo") }
             },
             dismissButton = {
                 TextButton(onClick = { showTagDialog = false }) { Text("Annuler") }
@@ -188,11 +203,40 @@ fun EquipmentListScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Galerie Photos")
                     }
+
+                    TextButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            showSourceDialog = false
+                            showManualAddDialog = true
+                        }
+                    ) {
+                        Icon(Icons.Default.Edit, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Saisie Manuelle (sans photo)")
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showSourceDialog = false }) { Text("Fermer") }
             }
+        )
+    }
+
+    if (showManualAddDialog) {
+        val newEquipment = Equipement(
+            zoneId = zoneId,
+            tagNumber = equipmentTag
+        )
+        EquipmentEditDialog(
+            equipment = newEquipment,
+            onDismiss = { showManualAddDialog = false },
+            onConfirm = { updatedEquip ->
+                viewModel.addEquipement(updatedEquip)
+                showManualAddDialog = false
+            },
+            onDelete = { showManualAddDialog = false },
+            onImageClick = {}
         )
     }
 
@@ -244,6 +288,7 @@ fun EquipmentListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EquipmentEditDialog(
     equipment: Equipement,
@@ -259,6 +304,12 @@ fun EquipmentEditDialog(
     var ip by remember { mutableStateOf(equipment.indiceProtection) }
     var annee by remember { mutableStateOf(equipment.anneeFabrication) }
     
+    var nature by remember { mutableStateOf(equipment.nature) }
+    var quantite by remember { mutableStateOf(equipment.quantite) }
+    var attestation by remember { mutableStateOf(equipment.numeroAttestation) }
+    var emp1 by remember { mutableStateOf(equipment.emplacement1) }
+    var emp2 by remember { mutableStateOf(equipment.emplacement2) }
+
     var dirGr by remember { mutableStateOf(equipment.dirGroupe) }
     var dirCat by remember { mutableStateOf(equipment.dirCategorie) }
     var dirAtmo by remember { mutableStateOf(equipment.dirAtmosphere) }
@@ -268,24 +319,67 @@ fun EquipmentEditDialog(
     var normT by remember { mutableStateOf(equipment.normeTemperature) }
     var normEPL by remember { mutableStateOf(equipment.normeEPL) }
 
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Modifier l'équipement")
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
-                }
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(if (equipment.id == 0L) "Nouvel équipement" else "Modifier l'équipement") },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(Icons.Default.Close, contentDescription = "Fermer")
+                        }
+                    },
+                    actions = {
+                        if (equipment.id != 0L) {
+                            IconButton(onClick = onDelete) {
+                                Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                onConfirm(equipment.copy(
+                                    tagNumber = tag,
+                                    fabricant = fabricant,
+                                    typeMateriel = type,
+                                    numeroSerie = sn,
+                                    indiceProtection = ip,
+                                    anneeFabrication = annee,
+                                    nature = nature,
+                                    quantite = quantite,
+                                    numeroAttestation = attestation,
+                                    emplacement1 = emp1,
+                                    emplacement2 = emp2,
+                                    dirGroupe = dirGr,
+                                    dirCategorie = dirCat,
+                                    dirAtmosphere = dirAtmo,
+                                    normeProtection = normProt,
+                                    normeGroupe = normGr,
+                                    normeTemperature = normT,
+                                    normeEPL = normEPL
+                                ))
+                            },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Enregistrer")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    )
+                )
             }
-        },
-        text = {
+        ) { innerPadding ->
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Affichage de la photo cliquable pour vérification
                 equipment.photoPlaquePath?.let { path ->
@@ -302,58 +396,93 @@ fun EquipmentEditDialog(
                     )
                 }
 
-                OutlinedTextField(value = tag, onValueChange = { tag = it }, label = { Text("N° TAG") })
+                OutlinedTextField(
+                    value = tag, 
+                    onValueChange = { tag = it }, 
+                    label = { Text("N° TAG") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text("Localisation", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = emp1, onValueChange = { emp1 = it }, label = { Text("Section") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = emp2, onValueChange = { emp2 = it }, label = { Text("Sous-section") }, modifier = Modifier.weight(1f))
                 }
-                OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("S/N") }, modifier = Modifier.fillMaxWidth())
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text("Détails Matériel", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("IP") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année") }, modifier = Modifier.weight(1f))
+                    var expandedNature by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expandedNature,
+                        onExpandedChange = { expandedNature = !expandedNature },
+                        modifier = Modifier.weight(1.2f)
+                    ) {
+                        OutlinedTextField(
+                            value = nature,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Nature") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedNature) },
+                            modifier = Modifier.menuAnchor(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedNature,
+                            onDismissRequest = { expandedNature = false }
+                        ) {
+                            listOf("Électrique", "Mécanique").forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        nature = option
+                                        expandedNature = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    OutlinedTextField(value = quantite, onValueChange = { quantite = it }, label = { Text("Qté") }, modifier = Modifier.weight(0.8f))
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant / Marque") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type / Modèle") }, modifier = Modifier.weight(1f))
                 }
                 
-                Text("Marquage Directives", style = MaterialTheme.typography.titleSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("N° de Série (S/N)") }, modifier = Modifier.fillMaxWidth())
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("Indice Protection (IP)") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année Fab.") }, modifier = Modifier.weight(1f))
+                }
+                
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(value = dirGr, onValueChange = { dirGr = it }, label = { Text("Gr") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = dirCat, onValueChange = { dirCat = it }, label = { Text("Cat") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = dirAtmo, onValueChange = { dirAtmo = it }, label = { Text("Atmo") }, modifier = Modifier.weight(1f))
                 }
                 
-                Text("Marquage Normes", style = MaterialTheme.typography.titleSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text("Marquage Normes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(value = normProt, onValueChange = { normProt = it }, label = { Text("Prot") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = normGr, onValueChange = { normGr = it }, label = { Text("Gr") }, modifier = Modifier.weight(1f))
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(value = normT, onValueChange = { normT = it }, label = { Text("T") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = normEPL, onValueChange = { normEPL = it }, label = { Text("EPL") }, modifier = Modifier.weight(1f))
                 }
+                
+                Spacer(modifier = Modifier.height(24.dp))
             }
-        },
-        confirmButton = {
-            Button(onClick = {
-                onConfirm(equipment.copy(
-                    tagNumber = tag,
-                    fabricant = fabricant,
-                    typeMateriel = type,
-                    numeroSerie = sn,
-                    indiceProtection = ip,
-                    anneeFabrication = annee,
-                    dirGroupe = dirGr,
-                    dirCategorie = dirCat,
-                    dirAtmosphere = dirAtmo,
-                    normeProtection = normProt,
-                    normeGroupe = normGr,
-                    normeTemperature = normT,
-                    normeEPL = normEPL
-                ))
-            }) { Text("Enregistrer") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
         }
-    )
+    }
 }
 
 @Composable
@@ -404,10 +533,17 @@ fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
             
             DetailRow("Type", equipment.typeMateriel)
             DetailRow("Fabricant", equipment.fabricant)
+            DetailRow("Nature", equipment.nature)
+            DetailRow("Quantité", equipment.quantite)
+            DetailRow("Certificat", equipment.numeroAttestation)
             DetailRow("S/N", equipment.numeroSerie)
             DetailRow("IP", equipment.indiceProtection)
             DetailRow("Année", equipment.anneeFabrication)
             
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Localisation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text("${equipment.emplacement1} / ${equipment.emplacement2}", style = MaterialTheme.typography.bodyMedium)
+
             Spacer(modifier = Modifier.height(8.dp))
             Text("Marquage Directives", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             Text(
