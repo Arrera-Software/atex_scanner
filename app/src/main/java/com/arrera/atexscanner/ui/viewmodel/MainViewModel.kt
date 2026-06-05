@@ -20,12 +20,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import java.io.File
 
 class MainViewModel(private val repository: ScannerRepository, private val ocrProcessor: OCRProcessor) : ViewModel() {
 
     // État pour l'équipement en cours de création via OCR
     var pendingEquipement by mutableStateOf<Equipement?>(null)
+        private set
+
+    var isExporting by mutableStateOf(false)
         private set
 
     fun setPendingTagAndZone(tag: String, zoneId: Long) {
@@ -165,13 +170,22 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
     // Export Excel d'un site
     fun exportSite(context: Context, siteId: Long, siteNom: String) {
         viewModelScope.launch {
-            val equipments = repository.getEquipementsBySite(siteId)
-            val zones = repository.getZonesBySite(siteId).first()
-            val zonesMap = zones.associateBy { it.id }
-            val exporter = ExcelExporter(context)
+            isExporting = true
             
-            val success = exporter.exportSite(siteNom, equipments, zonesMap)
+            val success = withContext(Dispatchers.IO) {
+                try {
+                    val equipments = repository.getEquipementsBySite(siteId)
+                    val zones = repository.getZonesBySite(siteId).first()
+                    val zonesMap = zones.associateBy { it.id }
+                    val exporter = ExcelExporter(context)
+                    exporter.exportSite(siteNom, equipments, zonesMap)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    false
+                }
+            }
             
+            isExporting = false
             if (success) {
                 Toast.makeText(context, "Export terminé : 1 Excel + 1 ZIP dans Documents/ATEX_Scanner", Toast.LENGTH_LONG).show()
             } else {

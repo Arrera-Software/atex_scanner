@@ -217,6 +217,33 @@ fun ZoneListScreen(
             }
         )
     }
+
+    if (viewModel.isExporting) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Génération du rapport en cours...",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Merci de patienter, nous préparons l'Excel et le ZIP des photos.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+        }
+    }
 }
 
 @Composable
