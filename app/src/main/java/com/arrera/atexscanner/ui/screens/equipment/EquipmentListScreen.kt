@@ -312,11 +312,7 @@ fun EquipmentEditDialog(
     var ip by remember { mutableStateOf(equipment.indiceProtection) }
     var annee by remember { mutableStateOf(equipment.anneeFabrication) }
     
-    var nature by remember { mutableStateOf(equipment.nature) }
-    var quantite by remember { mutableStateOf(equipment.quantite) }
     var attestation by remember { mutableStateOf(equipment.numeroAttestation) }
-    var emp1 by remember { mutableStateOf(equipment.emplacement1) }
-    var emp2 by remember { mutableStateOf(equipment.emplacement2) }
 
     var dirGr by remember { mutableStateOf(equipment.dirGroupe) }
     var dirCat by remember { mutableStateOf(equipment.dirCategorie) }
@@ -355,11 +351,7 @@ fun EquipmentEditDialog(
                                     numeroSerie = sn,
                                     indiceProtection = ip,
                                     anneeFabrication = annee,
-                                    nature = nature,
-                                    quantite = quantite,
                                     numeroAttestation = attestation,
-                                    emplacement1 = emp1,
-                                    emplacement2 = emp2,
                                     dirGroupe = dirGr,
                                     dirCategorie = dirCat,
                                     dirAtmosphere = dirAtmo,
@@ -412,61 +404,14 @@ fun EquipmentEditDialog(
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                Text("Localisation", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = emp1, onValueChange = { emp1 = it }, label = { Text("Section") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = emp2, onValueChange = { emp2 = it }, label = { Text("Sous-section") }, modifier = Modifier.weight(1f))
-                }
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Text("Détails Matériel", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    var expandedNature by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = expandedNature,
-                        onExpandedChange = { expandedNature = !expandedNature },
-                        modifier = Modifier.weight(1.2f)
-                    ) {
-                        OutlinedTextField(
-                            value = nature,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Nature") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedNature) },
-                            modifier = Modifier.menuAnchor(),
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expandedNature,
-                            onDismissRequest = { expandedNature = false }
-                        ) {
-                            listOf("Électrique", "Mécanique").forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        nature = option
-                                        expandedNature = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    OutlinedTextField(value = quantite, onValueChange = { quantite = it }, label = { Text("Qté") }, modifier = Modifier.weight(0.8f))
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant / Marque") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type / Modèle") }, modifier = Modifier.weight(1f))
-                }
-                
+                OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant / Marque") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type / Modèle") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("N° de Série (S/N)") }, modifier = Modifier.fillMaxWidth())
-                
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("Indice Protection (IP)") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année Fab.") }, modifier = Modifier.weight(1f))
-                }
+                OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("Indice Protection (IP)") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année Fab.") }, modifier = Modifier.fillMaxWidth())
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)

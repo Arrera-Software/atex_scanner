@@ -88,74 +88,21 @@ fun OcrResultScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.emplacement1,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(emplacement1 = it)) },
-                    label = { Text("Section") },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = equipment.emplacement2,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(emplacement2 = it)) },
-                    label = { Text("Sous-section") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text("Détails Matériel", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                var expandedNature by remember { mutableStateOf(false) }
-                ExposedDropdownMenuBox(
-                    expanded = expandedNature,
-                    onExpandedChange = { expandedNature = !expandedNature },
-                    modifier = Modifier.weight(1.2f)
-                ) {
-                    OutlinedTextField(
-                        value = equipment.nature,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Nature") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedNature) },
-                        modifier = Modifier.menuAnchor(),
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expandedNature,
-                        onDismissRequest = { expandedNature = false }
-                    ) {
-                        listOf("Électrique", "Mécanique").forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    viewModel.updatePendingEquipement(equipment.copy(nature = option))
-                                    expandedNature = false
-                                }
-                            )
-                        }
-                    }
-                }
-                OutlinedTextField(
-                    value = equipment.quantite,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(quantite = it)) },
-                    label = { Text("Qté") },
-                    modifier = Modifier.weight(0.8f)
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.fabricant,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(fabricant = it)) },
-                    label = { Text("Fabricant / Marque") },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = equipment.typeMateriel,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(typeMateriel = it)) },
-                    label = { Text("Type / Modèle") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            OutlinedTextField(
+                value = equipment.fabricant,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(fabricant = it)) },
+                label = { Text("Fabricant / Marque") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = equipment.typeMateriel,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(typeMateriel = it)) },
+                label = { Text("Type / Modèle") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = equipment.numeroAttestation,
@@ -171,27 +118,26 @@ fun OcrResultScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.indiceProtection,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(indiceProtection = it)) },
-                    label = { Text("IP") },
-                    modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = equipment.anneeFabrication,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(anneeFabrication = it)) },
-                    label = { Text("Année") },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            OutlinedTextField(
+                value = equipment.indiceProtection,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(indiceProtection = it)) },
+                label = { Text("Indice Protection (IP)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = equipment.anneeFabrication,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(anneeFabrication = it)) },
+                label = { Text("Année Fab.") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            Text("Marquage Directives", style = MaterialTheme.typography.titleSmall)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = equipment.dirGroupe,
                     onValueChange = { viewModel.updatePendingEquipement(equipment.copy(dirGroupe = it)) },
-                    label = { Text("Groupe") },
+                    label = { Text("Gr.") },
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -208,7 +154,8 @@ fun OcrResultScreen(
                 )
             }
 
-            Text("Marquage Normes", style = MaterialTheme.typography.titleSmall)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text("Marquage Normes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = equipment.normeProtection,
@@ -227,7 +174,7 @@ fun OcrResultScreen(
                 OutlinedTextField(
                     value = equipment.normeTemperature,
                     onValueChange = { viewModel.updatePendingEquipement(equipment.copy(normeTemperature = it)) },
-                    label = { Text("Temp.") },
+                    label = { Text("T") },
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
