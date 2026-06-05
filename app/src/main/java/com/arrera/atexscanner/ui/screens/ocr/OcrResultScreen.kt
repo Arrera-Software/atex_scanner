@@ -7,8 +7,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,8 @@ fun OcrResultScreen(
     }
 
     var showFullScreenImage by remember { mutableStateOf(false) }
+    var showProtKeyboard by remember { mutableStateOf(false) }
+    var showEplKeyboard by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -159,29 +164,100 @@ fun OcrResultScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = equipment.normeProtection,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(normeProtection = it)) },
+                    onValueChange = {},
                     label = { Text("Prot.") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).clickable { showProtKeyboard = true },
+                    readOnly = true,
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
-                OutlinedTextField(
-                    value = equipment.normeGroupe,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(normeGroupe = it)) },
-                    label = { Text("Gr.") },
+                
+                var expandedGr by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedGr,
+                    onExpandedChange = { expandedGr = !expandedGr },
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    OutlinedTextField(
+                        value = equipment.normeGroupe,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Gr.") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGr) },
+                        modifier = Modifier.menuAnchor(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedGr,
+                        onDismissRequest = { expandedGr = false }
+                    ) {
+                        listOf("IIA", "IIB", "IIC", "IIIA", "IIIB", "IIIC").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(normeGroupe = option))
+                                    expandedGr = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.normeTemperature,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(normeTemperature = it)) },
-                    label = { Text("T") },
+                var expandedT by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedT,
+                    onExpandedChange = { expandedT = !expandedT },
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    OutlinedTextField(
+                        value = equipment.normeTemperature,
+                        onValueChange = { input ->
+                            if (input.isEmpty()) {
+                                viewModel.updatePendingEquipement(equipment.copy(normeTemperature = ""))
+                            } else if (input.all { it.isDigit() || it == '°' || it == 'C' }) {
+                                val digits = input.filter { it.isDigit() }
+                                val newValue = if (digits.isNotEmpty()) "${digits}°C" else ""
+                                viewModel.updatePendingEquipement(equipment.copy(normeTemperature = newValue))
+                            }
+                        },
+                        label = { Text("T") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedT) },
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedT,
+                        onDismissRequest = { expandedT = false }
+                    ) {
+                        listOf("T1", "T2", "T3", "T4", "T5", "T6").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(normeTemperature = option))
+                                    expandedT = false
+                                }
+                            )
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = equipment.normeEPL,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(normeEPL = it)) },
+                    onValueChange = {},
                     label = { Text("EPL") },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).clickable { showEplKeyboard = true },
+                    readOnly = true,
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
             }
 
@@ -212,6 +288,118 @@ fun OcrResultScreen(
             onDismiss = { showFullScreenImage = false }
         )
     }
+
+    if (showProtKeyboard) {
+        ProtKeyboardDialog(
+            initialValue = equipment.normeProtection,
+            onDismiss = { showProtKeyboard = false },
+            onConfirm = { 
+                viewModel.updatePendingEquipement(equipment.copy(normeProtection = it))
+                showProtKeyboard = false
+            }
+        )
+    }
+
+    if (showEplKeyboard) {
+        AtexKeyboardDialog(
+            title = "Niveau de protection (EPL)",
+            initialValue = equipment.normeEPL,
+            keys = listOf("Ga", "Gb", "Gc", "Da", "Db", "Dc"),
+            onDismiss = { showEplKeyboard = false },
+            onConfirm = { 
+                viewModel.updatePendingEquipement(equipment.copy(normeEPL = it))
+                showEplKeyboard = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ProtKeyboardDialog(
+    initialValue: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    AtexKeyboardDialog(
+        title = "Mode de protection (Prot)",
+        initialValue = initialValue,
+        keys = listOf("d", "e", "m", "ia", "ib", "ic", "p", "o", "h", "c", "nA", "n", "q", "nR", "b", "K"),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm
+    )
+}
+
+@Composable
+fun AtexKeyboardDialog(
+    title: String,
+    initialValue: String,
+    keys: List<String>,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var currentValue by remember { mutableStateOf(initialValue) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Text(text = currentValue, style = MaterialTheme.typography.headlineSmall)
+                    }
+                }
+
+                val columns = if (keys.size <= 6) 3 else 4
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    keys.chunked(columns).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { key ->
+                                Button(
+                                    onClick = { currentValue += key },
+                                    modifier = Modifier.weight(1f).height(48.dp),
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text(key)
+                                }
+                            }
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = { currentValue = "" },
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(Icons.Default.DeleteForever, contentDescription = "Clear")
+                        }
+                        OutlinedButton(
+                            onClick = { if (currentValue.isNotEmpty()) currentValue = currentValue.dropLast(1) },
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Backspace")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(currentValue) }) {
+                Text("Valider")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @Composable
