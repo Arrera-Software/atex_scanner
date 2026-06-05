@@ -224,9 +224,9 @@ fun ZoneDialog(
     initialSection: String = "",
     initialSousSection: String = "",
     initialTypeAtmo: String = "Gaz",
-    initialClassification: String = "2",
-    initialGroupe: String = "IIB",
-    initialTemp: String = "T4",
+    initialClassification: String = "0",
+    initialGroupe: String = "IIA",
+    initialTemp: String = "T1",
     onDismiss: () -> Unit,
     onConfirm: (String, String, String, String, String, String, String) -> Unit,
     onDelete: (() -> Unit)? = null
