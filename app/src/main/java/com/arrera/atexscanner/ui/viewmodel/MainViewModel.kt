@@ -8,14 +8,19 @@ import com.arrera.atexscanner.data.Site
 import com.arrera.atexscanner.data.ZoneAtex
 import com.arrera.atexscanner.data.Equipement
 import com.arrera.atexscanner.utils.OCRProcessor
+import com.arrera.atexscanner.utils.ExcelExporter
 import android.net.Uri
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MainViewModel(private val repository: ScannerRepository, private val ocrProcessor: OCRProcessor) : ViewModel() {
 
@@ -154,6 +159,24 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
     fun deleteEquipement(equipement: Equipement) {
         viewModelScope.launch {
             repository.deleteEquipement(equipement)
+        }
+    }
+
+    // Export Excel d'un site
+    fun exportSite(context: Context, siteId: Long, siteNom: String) {
+        viewModelScope.launch {
+            val equipments = repository.getEquipementsBySite(siteId)
+            val zones = repository.getZonesBySite(siteId).first()
+            val zonesMap = zones.associateBy { it.id }
+            val exporter = ExcelExporter(context)
+            
+            val success = exporter.exportSite(siteNom, equipments, zonesMap)
+            
+            if (success) {
+                Toast.makeText(context, "Export terminé : 1 Excel + 1 ZIP dans Documents/ATEX_Scanner", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "Erreur lors de l'exportation", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

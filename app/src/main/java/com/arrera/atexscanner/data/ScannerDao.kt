@@ -41,6 +41,9 @@ interface ScannerDao {
     @Query("SELECT * FROM equipements WHERE zoneId = :zoneId")
     fun getEquipementsByZone(zoneId: Long): Flow<List<Equipement>>
 
+    @Query("SELECT * FROM equipements WHERE zoneId IN (SELECT id FROM zones_atex WHERE siteId = :siteId)")
+    suspend fun getEquipementsBySite(siteId: Long): List<Equipement>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInspection(inspection: Inspection): Long
 

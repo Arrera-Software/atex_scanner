@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ fun ZoneListScreen(
 ) {
     val zonesFlow = remember(siteId) { viewModel.getZonesBySite(siteId) }
     val zones by zonesFlow.collectAsState()
+    val context = LocalContext.current
     
     var showAddDialog by remember { mutableStateOf(false) }
     var zoneToEdit by remember { mutableStateOf<ZoneAtex?>(null) }
@@ -56,7 +58,7 @@ fun ZoneListScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Action export */ }) {
+                    IconButton(onClick = { viewModel.exportSite(context, siteId, siteNom) }) {
                         Icon(
                             Icons.Default.FileDownload,
                             contentDescription = "Exporter en Excel",

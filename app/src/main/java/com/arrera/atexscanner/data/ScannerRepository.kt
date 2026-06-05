@@ -41,6 +41,10 @@ class ScannerRepository(private val scannerDao: ScannerDao) {
         return scannerDao.getEquipementsByZone(zoneId)
     }
 
+    suspend fun getEquipementsBySite(siteId: Long): List<Equipement> {
+        return scannerDao.getEquipementsBySite(siteId)
+    }
+
     suspend fun insertEquipement(equipement: Equipement): Long {
         return scannerDao.insertEquipement(equipement)
     }
