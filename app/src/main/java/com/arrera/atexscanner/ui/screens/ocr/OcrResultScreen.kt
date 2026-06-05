@@ -107,13 +107,6 @@ fun OcrResultScreen(
             )
 
             OutlinedTextField(
-                value = equipment.numeroAttestation,
-                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it)) },
-                label = { Text("N° de certificat / Attestation") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
                 value = equipment.numeroSerie,
                 onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroSerie = it)) },
                 label = { Text("N° de Série (S/N)") },
@@ -191,6 +184,13 @@ fun OcrResultScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            OutlinedTextField(
+                value = equipment.numeroAttestation,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it)) },
+                label = { Text("N° de certificat / Attestation") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Button(
                 onClick = {

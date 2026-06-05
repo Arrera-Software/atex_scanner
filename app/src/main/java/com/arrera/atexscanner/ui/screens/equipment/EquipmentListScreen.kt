@@ -410,7 +410,6 @@ fun EquipmentEditDialog(
                 
                 OutlinedTextField(value = fabricant, onValueChange = { fabricant = it }, label = { Text("Fabricant / Marque") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type / Modèle") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("N° de Série (S/N)") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(
                     value = ip, 
@@ -451,6 +450,8 @@ fun EquipmentEditDialog(
                     OutlinedTextField(value = normT, onValueChange = { normT = it }, label = { Text("T") }, modifier = Modifier.weight(1f))
                     OutlinedTextField(value = normEPL, onValueChange = { normEPL = it }, label = { Text("EPL") }, modifier = Modifier.weight(1f))
                 }
+                
+                OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
                 
                 Spacer(modifier = Modifier.height(24.dp))
             }
