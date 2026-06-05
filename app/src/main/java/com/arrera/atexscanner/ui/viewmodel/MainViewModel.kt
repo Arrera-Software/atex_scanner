@@ -86,13 +86,25 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
         )
     }
 
+    // Récupérer une zone par son ID
+    fun getZoneById(zoneId: Long): StateFlow<ZoneAtex?> {
+        return repository.getZoneById(zoneId).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+    }
+
     // Ajouter une zone
-    fun addZone(siteId: Long, nom: String, classification: String, groupe: String, temperature: String) {
+    fun addZone(siteId: Long, nom: String, section: String, sousSection: String, typeAtmo: String, classification: String, groupe: String, temperature: String) {
         viewModelScope.launch {
             repository.insertZone(
                 ZoneAtex(
                     siteId = siteId,
                     nom = nom,
+                    section = section,
+                    sousSection = sousSection,
+                    typeAtmosphere = typeAtmo,
                     exigenceClassification = classification,
                     exigenceGroupe = groupe,
                     exigenceTemperature = temperature

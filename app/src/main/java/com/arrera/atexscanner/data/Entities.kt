@@ -26,6 +26,9 @@ data class ZoneAtex(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val siteId: Long,
     val nom: String = "", 
+    val section: String = "",
+    val sousSection: String = "",
+    val typeAtmosphere: String = "Gaz", // Gaz ou Poussière
     val exigenceClassification: String = "2",
     val exigenceGroupe: String = "IIB",
     val exigenceTemperature: String = "T4"

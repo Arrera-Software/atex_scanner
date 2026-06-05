@@ -1,6 +1,8 @@
 package com.arrera.atexscanner.ui.screens.zone
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,7 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
 import com.arrera.atexscanner.data.ZoneAtex
 import com.arrera.atexscanner.ui.viewmodel.MainViewModel
 
@@ -128,8 +132,8 @@ fun ZoneListScreen(
         ZoneDialog(
             title = "Nouvelle Zone ATEX",
             onDismiss = { showAddDialog = false },
-            onConfirm = { nom, classification, groupe, temp ->
-                viewModel.addZone(siteId, nom, classification, groupe, temp)
+            onConfirm = { nom, section, sousSection, typeAtmo, classification, groupe, temp ->
+                viewModel.addZone(siteId, nom, section, sousSection, typeAtmo, classification, groupe, temp)
             }
         )
     }
@@ -138,13 +142,19 @@ fun ZoneListScreen(
         ZoneDialog(
             title = "Modifier la Zone",
             initialNom = zoneToEdit!!.nom,
+            initialSection = zoneToEdit!!.section,
+            initialSousSection = zoneToEdit!!.sousSection,
+            initialTypeAtmo = zoneToEdit!!.typeAtmosphere,
             initialClassification = zoneToEdit!!.exigenceClassification,
             initialGroupe = zoneToEdit!!.exigenceGroupe,
             initialTemp = zoneToEdit!!.exigenceTemperature,
             onDismiss = { zoneToEdit = null },
-            onConfirm = { nom, classification, groupe, temp ->
+            onConfirm = { nom, section, sousSection, typeAtmo, classification, groupe, temp ->
                 viewModel.updateZone(zoneToEdit!!.copy(
                     nom = nom,
+                    section = section,
+                    sousSection = sousSection,
+                    typeAtmosphere = typeAtmo,
                     exigenceClassification = classification,
                     exigenceGroupe = groupe,
                     exigenceTemperature = temp
@@ -211,21 +221,32 @@ fun ZoneListScreen(
 fun ZoneDialog(
     title: String,
     initialNom: String = "",
+    initialSection: String = "",
+    initialSousSection: String = "",
+    initialTypeAtmo: String = "Gaz",
     initialClassification: String = "2",
     initialGroupe: String = "IIB",
     initialTemp: String = "T4",
     onDismiss: () -> Unit,
-    onConfirm: (String, String, String, String) -> Unit,
+    onConfirm: (String, String, String, String, String, String, String) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
     var zoneNom by remember { mutableStateOf(initialNom) }
-    var classification by remember { mutableStateOf(initialClassification) }
-    var groupe by remember { mutableStateOf(initialGroupe) }
-    var temperature by remember { mutableStateOf(initialTemp) }
+    var section by remember { mutableStateOf(initialSection) }
+    var sousSection by remember { mutableStateOf(initialSousSection) }
+    var typeAtmo by remember { mutableStateOf(initialTypeAtmo) }
+    var classification by remember { mutableStateOf(if (typeAtmo == "Gaz") initialClassification.ifEmpty { "2" } else initialClassification.ifEmpty { "22" }) }
+    var groupe by remember { mutableStateOf(if (typeAtmo == "Gaz") initialGroupe.ifEmpty { "IIB" } else initialGroupe.ifEmpty { "IIIB" }) }
+    var temperature by remember { mutableStateOf(if (typeAtmo == "Gaz") initialTemp.ifEmpty { "T4" } else initialTemp) }
 
-    val classificationOptions = listOf("0", "1", "2", "20", "21", "22")
-    val groupeOptions = listOf("IIA", "IIB", "IIC", "IIIA", "IIIB", "IIIC")
-    val tempOptions = listOf("T1", "T2", "T3", "T4", "T5", "T6")
+    val typeAtmoOptions = listOf("Gaz", "Poussière")
+    
+    val gazClassificationOptions = listOf("0", "1", "2")
+    val gazGroupeOptions = listOf("IIA", "IIB", "IIC")
+    val gazTempOptions = listOf("T1", "T2", "T3", "T4", "T5", "T6")
+
+    val poussiereClassificationOptions = listOf("20", "21", "22")
+    val poussiereGroupeOptions = listOf("IIIA", "IIIB", "IIIC")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -248,42 +269,104 @@ fun ZoneDialog(
             }
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedTextField(
                     value = zoneNom,
                     onValueChange = { zoneNom = it },
                     label = { Text("Nom") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                AtexDropdown(
-                    label = "Classification",
-                    options = classificationOptions,
-                    selectedOption = classification,
-                    onOptionSelected = { classification = it },
+                OutlinedTextField(
+                    value = section,
+                    onValueChange = { section = it },
+                    label = { Text("Section") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = sousSection,
+                    onValueChange = { sousSection = it },
+                    label = { Text("Sous-section") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                AtexDropdown(
+                    label = "Type d'atmosphère",
+                    options = typeAtmoOptions,
+                    selectedOption = typeAtmo,
+                    onOptionSelected = { 
+                        typeAtmo = it 
+                        // Reset defaults on type change
+                        if (it == "Gaz") {
+                            classification = "2"
+                            groupe = "IIB"
+                            temperature = "T4"
+                        } else {
+                            classification = "22"
+                            groupe = "IIIB"
+                            temperature = ""
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (typeAtmo == "Gaz") {
                     AtexDropdown(
-                        label = "Groupe",
-                        options = groupeOptions,
-                        selectedOption = groupe,
-                        onOptionSelected = { groupe = it },
-                        modifier = Modifier.weight(1f)
+                        label = "Classification",
+                        options = gazClassificationOptions,
+                        selectedOption = classification,
+                        onOptionSelected = { classification = it },
+                        modifier = Modifier.fillMaxWidth()
                     )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AtexDropdown(
+                            label = "Groupe",
+                            options = gazGroupeOptions,
+                            selectedOption = groupe,
+                            onOptionSelected = { groupe = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        AtexDropdown(
+                            label = "Temp",
+                            options = gazTempOptions,
+                            selectedOption = temperature,
+                            onOptionSelected = { temperature = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                } else {
                     AtexDropdown(
-                        label = "Temp",
-                        options = tempOptions,
-                        selectedOption = temperature,
-                        onOptionSelected = { temperature = it },
-                        modifier = Modifier.weight(1f)
+                        label = "Classification",
+                        options = poussiereClassificationOptions,
+                        selectedOption = classification,
+                        onOptionSelected = { classification = it },
+                        modifier = Modifier.fillMaxWidth()
                     )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AtexDropdown(
+                            label = "Groupe",
+                            options = poussiereGroupeOptions,
+                            selectedOption = groupe,
+                            onOptionSelected = { groupe = it },
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedTextField(
+                            value = temperature,
+                            onValueChange = { temperature = it },
+                            label = { Text("Temp (°C)") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             Button(onClick = {
                 if (zoneNom.isNotBlank()) {
-                    onConfirm(zoneNom, classification, groupe, temperature)
+                    onConfirm(zoneNom, section, sousSection, typeAtmo, classification, groupe, temperature)
                     onDismiss()
                 }
             }) { Text("Enregistrer") }
@@ -314,9 +397,15 @@ fun ZoneCard(zone: ZoneAtex, onEdit: () -> Unit, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(zone.nom, style = MaterialTheme.typography.titleLarge)
+                if (zone.section.isNotBlank() || zone.sousSection.isNotBlank()) {
+                    Text(
+                        "${zone.section}${if (zone.section.isNotBlank() && zone.sousSection.isNotBlank()) " / " else ""}${zone.sousSection}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 Text(
-                    "Exigence : Zone ${zone.exigenceClassification} / ${zone.exigenceGroupe} ${zone.exigenceTemperature}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    "Exigence : ${zone.typeAtmosphere} Zone ${zone.exigenceClassification} / ${zone.exigenceGroupe} ${if (zone.typeAtmosphere == "Poussière" && zone.exigenceTemperature.isNotEmpty()) "${zone.exigenceTemperature}°C" else zone.exigenceTemperature}",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.outline
                 )
             }

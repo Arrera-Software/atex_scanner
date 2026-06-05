@@ -20,6 +20,10 @@ class ScannerRepository(private val scannerDao: ScannerDao) {
         return scannerDao.getZonesBySite(siteId)
     }
 
+    fun getZoneById(zoneId: Long): Flow<ZoneAtex?> {
+        return scannerDao.getZoneById(zoneId)
+    }
+
     suspend fun insertZone(zone: ZoneAtex): Long {
         return scannerDao.insertZone(zone)
     }

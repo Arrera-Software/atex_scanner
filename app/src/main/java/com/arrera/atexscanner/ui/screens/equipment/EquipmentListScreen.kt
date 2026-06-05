@@ -48,6 +48,9 @@ fun EquipmentListScreen(
     val equipmentsFlow = remember(zoneId) { viewModel.getEquipementsByZone(zoneId) }
     val equipments by equipmentsFlow.collectAsState(initial = emptyList())
     
+    val zoneFlow = remember(zoneId) { viewModel.getZoneById(zoneId) }
+    val zone by zoneFlow.collectAsState()
+    
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
     
@@ -80,7 +83,12 @@ fun EquipmentListScreen(
                 title = { 
                     Column {
                         Text(zoneNom, style = MaterialTheme.typography.titleMedium)
-                        Text("Équipements & Inspections", style = MaterialTheme.typography.bodySmall)
+                        zone?.let { z ->
+                            Text(
+                                "Exigence : ${z.typeAtmosphere} Zone ${z.exigenceClassification} / ${z.exigenceGroupe} ${if (z.typeAtmosphere == "Poussière" && z.exigenceTemperature.isNotEmpty()) "${z.exigenceTemperature}°C" else z.exigenceTemperature}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        } ?: Text("Équipements & Inspections", style = MaterialTheme.typography.bodySmall)
                     }
                 },
                 navigationIcon = {
