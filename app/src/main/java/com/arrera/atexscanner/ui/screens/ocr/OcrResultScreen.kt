@@ -139,24 +139,98 @@ fun OcrResultScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.dirGroupe,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(dirGroupe = it)) },
-                    label = { Text("Gr.") },
+                var expandedDirGr by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedDirGr,
+                    onExpandedChange = { expandedDirGr = !expandedDirGr },
                     modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = equipment.dirCategorie,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(dirCategorie = it)) },
-                    label = { Text("Cat.") },
+                ) {
+                    OutlinedTextField(
+                        value = equipment.dirGroupe,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Gr.") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirGr) },
+                        modifier = Modifier.menuAnchor(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDirGr,
+                        onDismissRequest = { expandedDirGr = false }
+                    ) {
+                        listOf("I", "II").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(dirGroupe = option))
+                                    expandedDirGr = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                var expandedDirCat by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedDirCat,
+                    onExpandedChange = { expandedDirCat = !expandedDirCat },
                     modifier = Modifier.weight(1f)
-                )
-                OutlinedTextField(
-                    value = equipment.dirAtmosphere,
-                    onValueChange = { viewModel.updatePendingEquipement(equipment.copy(dirAtmosphere = it)) },
-                    label = { Text("Atmo.") },
+                ) {
+                    OutlinedTextField(
+                        value = equipment.dirCategorie,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Cat.") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirCat) },
+                        modifier = Modifier.menuAnchor(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDirCat,
+                        onDismissRequest = { expandedDirCat = false }
+                    ) {
+                        listOf("1", "2", "3").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(dirCategorie = option))
+                                    expandedDirCat = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                var expandedDirAtmo by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expandedDirAtmo,
+                    onExpandedChange = { expandedDirAtmo = !expandedDirAtmo },
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    OutlinedTextField(
+                        value = equipment.dirAtmosphere,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Atmo.") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirAtmo) },
+                        modifier = Modifier.menuAnchor(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expandedDirAtmo,
+                        onDismissRequest = { expandedDirAtmo = false }
+                    ) {
+                        listOf("G", "D", "GD").forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    viewModel.updatePendingEquipement(equipment.copy(dirAtmosphere = option))
+                                    expandedDirAtmo = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

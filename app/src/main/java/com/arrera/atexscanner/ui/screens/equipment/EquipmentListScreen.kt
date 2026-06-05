@@ -441,9 +441,98 @@ fun EquipmentEditDialog(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = dirGr, onValueChange = { dirGr = it }, label = { Text("Gr") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = dirCat, onValueChange = { dirCat = it }, label = { Text("Cat") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = dirAtmo, onValueChange = { dirAtmo = it }, label = { Text("Atmo") }, modifier = Modifier.weight(1f))
+                    var expandedDirGr by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDirGr,
+                        onExpandedChange = { expandedDirGr = !expandedDirGr },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = dirGr,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Gr") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirGr) },
+                            modifier = Modifier.menuAnchor(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedDirGr,
+                            onDismissRequest = { expandedDirGr = false }
+                        ) {
+                            listOf("I", "II").forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        dirGr = option
+                                        expandedDirGr = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    var expandedDirCat by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDirCat,
+                        onExpandedChange = { expandedDirCat = !expandedDirCat },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = dirCat,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Cat") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirCat) },
+                            modifier = Modifier.menuAnchor(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedDirCat,
+                            onDismissRequest = { expandedDirCat = false }
+                        ) {
+                            listOf("1", "2", "3").forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        dirCat = option
+                                        expandedDirCat = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    var expandedDirAtmo by remember { mutableStateOf(false) }
+                    ExposedDropdownMenuBox(
+                        expanded = expandedDirAtmo,
+                        onExpandedChange = { expandedDirAtmo = !expandedDirAtmo },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = dirAtmo,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Atmo") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedDirAtmo) },
+                            modifier = Modifier.menuAnchor(),
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expandedDirAtmo,
+                            onDismissRequest = { expandedDirAtmo = false }
+                        ) {
+                            listOf("G", "D", "GD").forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        dirAtmo = option
+                                        expandedDirAtmo = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
