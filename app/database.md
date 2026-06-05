@@ -22,9 +22,12 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | `id` | Long (PK) | Identifiant unique. |
 | `siteId` | Long (FK) | Lien vers le Site. |
 | `nom` | String | Gazomètre aciérie |
-| `exigenceClassification` | String | 2 |
-| `exigenceGroupe` | String | IIB |
-| `exigenceTemperature` | String | T1 |
+| `section` | String | Section A |
+| `sousSection` | String | Zone Sud |
+| `typeAtmosphere` | String | Gaz / Poussière |
+| `exigenceClassification` | String | 0, 1, 2 (Gaz) ou 20, 21, 22 (Poussière) |
+| `exigenceGroupe` | String | IIB (Gaz) ou IIIC (Poussière) |
+| `exigenceTemperature` | String | T4 (Gaz) ou 180°C (Poussière) |
 
 ---
 
@@ -33,8 +36,8 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `zoneId` | Long (FK) | Lien vers la Zone. |
-| `emplacement1` | String | Au sol |
-| `emplacement2` | String | Proximité gazomètre au sud |
+| `emplacement1` | String | Section (Localisation) |
+| `emplacement2` | String | Sous-section (Localisation) |
 | `tagNumber` | String | N° TAG |
 | `typeMateriel` | String | Coffret électrique |
 | `fabricant` | String | TECHNOR |
@@ -48,17 +51,26 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | `normeGroupe` | String | Normes: IIB |
 | `normeTemperature`| String | Normes: T4 |
 | `normeEPL` | String | Normes: Gb |
+| `nature` | String | Électrique / Mécanique |
+| `quantite` | String | 1 |
 | `numeroAttestation`| String | LCIE 00 ATEX 6044 X |
 | `photoPlaquePath` | String | Chemin de la photo. |
 
 ---
 
-### 4. Table : `inspections` (Section VERDICT)
-| Champ | Type | Exemple |
+### 4. Table : `inspections` (Section ADÉQUATION & REMARQUES)
+| Champ | Type | Description |
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `equipementId` | Long (FK) | Lien vers l'Équipement. |
 | `date` | Long | Date de l'inspection. |
-| `statusConformite` | String | C, NA, NC, NE |
-| `typeObservation` | String | Marquage |
-| `commentaires` | String | Notes complémentaires. |
+| `inspecteurNom` | String | Nom du technicien. |
+| `conformiteAtex` | String | OUI / NON |
+| `commentaires` | String | Observations générales. |
+| `assistanceMiseConformite` | String | Conseils pour correction. |
+| `marquageRemarques` | String | Remarques sur le marquage. |
+| `presseEtoupes` | String | État des presse-étoupes / bouchons. |
+| `miseAlaTerre` | String | État de la mise à la terre. |
+| `gainesCables` | String | État des gaines et câbles. |
+| `boitierEnveloppe` | String | État du boîtier / enveloppe. |
+| `autres` | String | Autres points de contrôle. |
