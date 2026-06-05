@@ -12,49 +12,45 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `nom` | String | Nom du site client. |
-| `dateCreation` | Long | Date de création. |
+| `dateCreation` | Long | Date de création (Timestamp). |
 
 ---
 
 ### 2. Table : `zones_atex` (Section LOCALISATION & EXIGENCE)
-| Champ | Type | Exemple |
+| Champ | Type | Options / Exemples |
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `siteId` | Long (FK) | Lien vers le Site. |
-| `nom` | String | Gazomètre aciérie |
-| `section` | String | Section A |
-| `sousSection` | String | Zone Sud |
-| `typeAtmosphere` | String | Gaz / Poussière |
-| `exigenceClassification` | String | 0, 1, 2 (Gaz) ou 20, 21, 22 (Poussière) |
-| `exigenceGroupe` | String | IIB (Gaz) ou IIIC (Poussière) |
-| `exigenceTemperature` | String | T4 (Gaz) ou 180°C (Poussière) |
+| `nom` | String | Nom de la zone (ex: Local Chargeur). |
+| `section` | String | Zone géographique large. |
+| `sousSection` | String | Emplacement précis. |
+| `typeAtmosphere` | String | Gaz / Poussière. |
+| `exigenceClassification` | String | **Gaz**: 0, 1, 2 \| **Poussière**: 20, 21, 22. |
+| `exigenceGroupe` | String | **Gaz**: IIA, IIB, IIC \| **Poussière**: IIIA, IIIB, IIIC. |
+| `exigenceTemperature` | String | **Gaz**: T1 à T6 \| **Poussière**: Valeur en °C. |
 
 ---
 
 ### 3. Table : `equipements` (Section MATÉRIEL & MARQUAGE)
-| Champ | Type | Exemple / Description |
+| Champ | Type | Options / Exemples |
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `zoneId` | Long (FK) | Lien vers la Zone. |
-| `emplacement1` | String | Section (Localisation) |
-| `emplacement2` | String | Sous-section (Localisation) |
-| `tagNumber` | String | N° TAG |
-| `typeMateriel` | String | Coffret électrique |
-| `fabricant` | String | TECHNOR |
-| `numeroSerie` | String | 112342 54 |
-| `indiceProtection`| String | IP66 |
-| `anneeFabrication`| String | 2002 |
-| `dirGroupe` | String | Directives: II |
-| `dirCategorie` | String | Directives: 2 |
-| `dirAtmosphere` | String | Directives: G |
-| `normeProtection` | String | Normes: de |
-| `normeGroupe` | String | Normes: IIB |
-| `normeTemperature`| String | Normes: T4 |
-| `normeEPL` | String | Normes: Gb |
-| `nature` | String | Électrique / Mécanique |
-| `quantite` | String | 1 |
-| `numeroAttestation`| String | LCIE 00 ATEX 6044 X |
-| `photoPlaquePath` | String | Chemin de la photo. |
+| `tagNumber` | String | N° TAG unique du matériel. |
+| `fabricant` | String | Marque / Fabricant. |
+| `typeMateriel` | String | Modèle / Type. |
+| `numeroSerie` | String | S/N. |
+| `indiceProtection`| String | Préfixe "IP" obligatoire + chiffres (ex: IP66). |
+| `anneeFabrication`| String | Année (ex: 2023). |
+| `dirGroupe` | String | Directives : **I**, **II**. |
+| `dirCategorie` | String | Directives : **1**, **2**, **3**. |
+| `dirAtmosphere` | String | Directives : **G**, **D**, **GD**. |
+| `normeProtection` | String | Modes : **d, e, m, ia, ib, ic, p, o, h, c, nA, n, q, nR, b, K**. |
+| `normeGroupe` | String | Normes : **IIA, IIB, IIC, IIIA, IIIB, IIIC**. |
+| `normeTemperature`| String | **T1 à T6** ou valeur en **°C**. |
+| `normeEPL` | String | Niveau : **Ga, Gb, Gc, Da, Db, Dc**. |
+| `numeroAttestation`| String | N° de certificat (ex: LCIE 00 ATEX 6044 X). |
+| `photoPlaquePath` | String | URI / Chemin local de la photo de la plaque. |
 
 ---
 
@@ -63,9 +59,9 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | :--- | :--- | :--- |
 | `id` | Long (PK) | Identifiant unique. |
 | `equipementId` | Long (FK) | Lien vers l'Équipement. |
-| `date` | Long | Date de l'inspection. |
+| `date` | Long | Date de l'inspection (Timestamp). |
 | `inspecteurNom` | String | Nom du technicien. |
-| `conformiteAtex` | String | OUI / NON |
+| `conformiteAtex` | String | OUI / NON. |
 | `commentaires` | String | Observations générales. |
 | `assistanceMiseConformite` | String | Conseils pour correction. |
 | `marquageRemarques` | String | Remarques sur le marquage. |

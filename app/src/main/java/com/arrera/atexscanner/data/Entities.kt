@@ -49,10 +49,6 @@ data class Equipement(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val zoneId: Long,
     
-    // Localisation
-    val emplacement1: String = "",
-    val emplacement2: String = "",
-    
     // Matériel
     val tagNumber: String = "",
     val typeMateriel: String = "",
@@ -71,9 +67,6 @@ data class Equipement(
     val normeGroupe: String = "",
     val normeTemperature: String = "",
     val normeEPL: String = "",
-    
-    val nature: String = "Électrique",
-    val quantite: String = "1",
     
     val numeroAttestation: String = "",
     val photoPlaquePath: String? = null

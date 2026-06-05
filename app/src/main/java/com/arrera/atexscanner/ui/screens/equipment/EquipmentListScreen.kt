@@ -804,17 +804,11 @@ fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
             
             DetailRow("Type", equipment.typeMateriel)
             DetailRow("Fabricant", equipment.fabricant)
-            DetailRow("Nature", equipment.nature)
-            DetailRow("Quantité", equipment.quantite)
             DetailRow("Certificat", equipment.numeroAttestation)
             DetailRow("S/N", equipment.numeroSerie)
             DetailRow("IP", equipment.indiceProtection)
             DetailRow("Année", equipment.anneeFabrication)
             
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Localisation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
-            Text("${equipment.emplacement1} / ${equipment.emplacement2}", style = MaterialTheme.typography.bodyMedium)
-
             Spacer(modifier = Modifier.height(8.dp))
             Text("Marquage Directives", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
             Text(
