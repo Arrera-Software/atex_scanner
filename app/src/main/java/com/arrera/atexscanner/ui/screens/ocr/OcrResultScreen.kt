@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -119,16 +121,21 @@ fun OcrResultScreen(
             )
 
             OutlinedTextField(
-                value = equipment.indiceProtection,
-                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(indiceProtection = it)) },
+                value = if (equipment.indiceProtection.startsWith("IP")) equipment.indiceProtection else "IP${equipment.indiceProtection}",
+                onValueChange = { 
+                    val newValue = if (it.startsWith("IP")) it else "IP"
+                    viewModel.updatePendingEquipement(equipment.copy(indiceProtection = newValue)) 
+                },
                 label = { Text("Indice Protection (IP)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             OutlinedTextField(
                 value = equipment.anneeFabrication,
                 onValueChange = { viewModel.updatePendingEquipement(equipment.copy(anneeFabrication = it)) },
                 label = { Text("Année Fab.") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

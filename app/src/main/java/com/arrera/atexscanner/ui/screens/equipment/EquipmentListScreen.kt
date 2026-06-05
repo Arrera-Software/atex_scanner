@@ -28,6 +28,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -309,7 +311,7 @@ fun EquipmentEditDialog(
     var fabricant by remember { mutableStateOf(equipment.fabricant) }
     var type by remember { mutableStateOf(equipment.typeMateriel) }
     var sn by remember { mutableStateOf(equipment.numeroSerie) }
-    var ip by remember { mutableStateOf(equipment.indiceProtection) }
+    var ip by remember { mutableStateOf(if (equipment.indiceProtection.startsWith("IP")) equipment.indiceProtection else "IP") }
     var annee by remember { mutableStateOf(equipment.anneeFabrication) }
     
     var attestation by remember { mutableStateOf(equipment.numeroAttestation) }
@@ -410,8 +412,26 @@ fun EquipmentEditDialog(
                 OutlinedTextField(value = type, onValueChange = { type = it }, label = { Text("Type / Modèle") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(value = sn, onValueChange = { sn = it }, label = { Text("N° de Série (S/N)") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = ip, onValueChange = { ip = it }, label = { Text("Indice Protection (IP)") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = annee, onValueChange = { annee = it }, label = { Text("Année Fab.") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = ip, 
+                    onValueChange = { 
+                        if (it.startsWith("IP")) {
+                            ip = it 
+                        } else if (it.isEmpty() || !it.startsWith("I")) {
+                            ip = "IP"
+                        }
+                    }, 
+                    label = { Text("Indice Protection (IP)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = annee, 
+                    onValueChange = { annee = it }, 
+                    label = { Text("Année Fab.") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Text("Marquage Directives", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
