@@ -1,6 +1,6 @@
 # Structure de la Base de Données - ATEX Scanner
 
-Ce document décrit l'organisation de la base de données locale (Room) pour correspondre au rapport Excel final.
+Ce document décrit l'organisation de la base de données locale (Room) pour correspondre au rapport Excel final et au fonctionnement de l'application.
 
 ## Schéma Relationnel
 `Site` -> `ZoneATEX` -> `Equipement` -> `Inspection`
@@ -46,10 +46,10 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | `dirCategorie` | String | Directives : **1**, **2**, **3**. |
 | `dirAtmosphere` | String | Directives : **G**, **D**, **GD**. |
 | `normeProtection` | String | Modes : **d, e, m, ia, ib, ic, p, o, h, c, nA, n, q, nR, b, K**. |
-| `normeGroupe` | String | Normes : **IIA, IIB, IIC, IIIA, IIIB, IIIC**. |
+| `normeGroupe` | String | Normes : **II, IIA, IIB, IIC, IIIA, IIIB, IIIC**. |
 | `normeTemperature`| String | **T1 à T6** ou valeur en **°C**. |
 | `normeEPL` | String | Niveau : **Ga, Gb, Gc, Da, Db, Dc**. |
-| `numeroAttestation`| String | N° de certificat (ex: LCIE 00 ATEX 6044 X). |
+| `numeroAttestation`| String | N° de certificat (Saisie forcée en MAJUSCULES). |
 | `photoPlaquePath` | String | URI / Chemin local de la photo de la plaque. |
 
 ---
@@ -70,3 +70,17 @@ Ce document décrit l'organisation de la base de données locale (Room) pour cor
 | `gainesCables` | String | État des gaines et câbles. |
 | `boitierEnveloppe` | String | État du boîtier / enveloppe. |
 | `autres` | String | Autres points de contrôle. |
+
+---
+
+## Logique d'Exportation Excel (Rapport Global)
+L'exportation se fait au niveau du **Site** et génère deux fichiers dans `Documents/ATEX_Scanner/` :
+1.  **Fichier Excel (`.xlsx`)** :
+    *   **Localisation** : Section, Sous-section et Nom Zone hérités de la zone parente.
+    *   **Zone ATEX** : Découpée en 3 colonnes (**Classification** | **Groupe** | **Température**).
+    *   **Marquage Directives** : Découpé en 3 colonnes (**Groupe** | **Catégorie** | **Atmosphère**).
+    *   **Marquage Normes** : Découpé en 4 colonnes (**Prot** | **Groupe** | **Température** | **EPL**).
+    *   **Tous les équipements** sont exportés, avec ou sans photo.
+2.  **Fichier ZIP (`.zip`)** :
+    *   Contient toutes les photos des plaques signalétiques du site.
+    *   Chaque photo est renommée selon le **TAG** de l'équipement (ex: `TAG123.jpg`).

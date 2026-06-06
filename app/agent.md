@@ -5,45 +5,41 @@ Créer un outil métier Android pour les inspecteurs en zone ATEX visant à auto
 L'application doit :
 - Supprimer la double saisie (terrain puis bureau).
 - Réduire les erreurs de saisie grâce à l'OCR.
-- Générer un rapport Excel conforme au modèle métier (Colonnes : Localisation, Zone ATEX client, Matériel, Marquage, Verdict).
-- Conserver les photos des plaques signalétiques comme preuves.
+- Générer un rapport Excel conforme au modèle métier détaillé.
+- Conserver les photos des plaques signalétiques comme preuves dans un fichier ZIP.
 
 ## Stack Technique & Règles de Développement
-
 - **Langage** : Kotlin.
 - **Interface Utilisateur** : Jetpack Compose exclusivement (Material 3).
 - **Architecture de données** :
-    - **Room** (Single Source of Truth).
-    - Structure hiérarchique : `Site` > `ZoneAtex` > `Equipement` > `Inspection`.
+    - **Room** : Structure hiérarchique : `Site` > `ZoneAtex` > `Equipement` > `Inspection`.
 - **Appareil Photo** : CameraX.
-- **OCR** : Google ML Kit (Text Recognition) pour l'extraction des données de plaques.
-- **Génération Excel** : Apache POI (Formatage conditionnel : Vert/Rouge pour le verdict).
-- **Gestion des Fichiers** : Scoped Storage + `Intent.ACTION_CREATE_DOCUMENT`.
+- **OCR** : Google ML Kit (Text Recognition) pour l'extraction des données.
+- **Génération Excel** : Apache POI.
+- **Gestion des Fichiers** : MediaStore pour enregistrer dans le dossier public `Documents/ATEX_Scanner/`.
 
 ## Structure de Données & Métier (Alignée sur Rapport Excel)
+L'exportation Excel est structurée selon un découpage technique précis :
+1. **Localisation** : Section, Sous-section et Nom de Zone hérités de la Zone ATEX parente.
+2. **Zone ATEX Client (3 colonnes)** : Classification | Groupe | Température.
+3. **Identification Matériel** : N° TAG, Type, Fabricant, S/N, IP (préfixe "IP" auto), Année.
+4. **Marquage Directives (3 colonnes)** : Groupe (I, II) | Catégorie (1, 2, 3) | Atmosphère (G, D, GD).
+5. **Marquage Normes (4 colonnes)** : Protection (d, e, m...) | Groupe (II, IIA... IIIC) | Température (T1-T6 ou °C) | EPL (Ga, Gb...).
+6. **Certification** : Numéro d'attestation (Saisie en MAJUSCULES forcée, historique des certificats du site proposé via des chips de suggestion).
 
-1. **Localisation & Exigences (ZoneAtex)** :
-    - Nom du lieu, Classification client (0, 1, 2...), Groupe Gaz, Classe de Température.
-2. **Identification Matériel (Equipement)** :
-    - Emplacement détaillé, N° TAG (obligatoire), Type, Fabricant, S/N, IP, Année.
-3. **Marquage Technique (Equipement)** :
-    - **Directives** : Groupe (II), Catégorie (2), Atmosphère (G/D).
-    - **Normes** : Protection (ex: db), Groupe (IIB), Température (T4), EPL (Gb).
-    - N° d'attestation d'examen de type.
-4. **Verdict (Inspection)** :
-    - Status : **C** (Conforme), **NA** (Non Applicable), **NC** (Non Conforme), **NE** (Non Examiné).
-    - Type d'observation (Marquage, État, etc.).
-
-## Fonctionnalités Clés
-
-1. **Gestion Hiérarchique** : Navigation fluide de la liste des sites vers les zones, puis vers les équipements.
-2. **Scan intelligent & Récupération de données (Priorité Actuelle)** :
-    - Capture photo + OCR.
-    - **Focus actuel** : Extraction fiable et structurée de toutes les informations des plaques signalétiques (TAG, Fabricant, S/N, Marquages Directives et Normes).
-    - **Évolution future** : L'algorithme de comparaison automatique (Verdict C/NC) sera implémenté dans une phase ultérieure. Pour le moment, l'inspecteur saisit ou valide les données extraites.
-3. **Export Professionnel** : Génération instantanée du fichier `.xlsx` respectant strictement le colonnage du tableau de référence.
+## Fonctionnalités Clés Implémentées
+1. **Navigation Hiérarchique** : Gestion complète des Sites, Zones et Équipements.
+2. **Scan & OCR** : Extraction structurée des données de la plaque avec interface de validation.
+3. **Export Global (Niveau Site)** :
+    - Génération d'un **Excel unique** pour tout le site (tous les équipements inclus).
+    - Génération d'un **ZIP de photos** renommées par TAG (ex: `TAG123.jpg`).
+    - Traitement en arrière-plan (`Dispatchers.IO`) avec écran de chargement pour éviter les freezes.
+4. **Sécurité & Ergonomie** :
+    - Gestion automatique des permissions (Caméra, Stockage) au lancement.
+    - Claviers techniques personnalisés (Prot, EPL).
+    - Auto-formatage des champs (IP, Température en °C).
 
 ## Contraintes d'Optimisation
-- **Performance** : Gestion rigoureuse de la mémoire (RAM 4-6 Go) lors de l'usage simultané de la caméra et de l'OCR.
-- **Qualité OCR** : Configuration CameraX optimisée pour la macro (mise au point sur plaques signalétiques).
-- **Version Android** : Min SDK 26, Target SDK 35/36.
+- **Performance** : Travail asynchrone pour les tâches lourdes (OCR, Export Excel).
+- **Qualité de Saisie** : Minimiser les erreurs via des listes déroulantes techniques exhaustives et des suggestions basées sur l'historique du site.
+- **Version Android** : Support du Scoped Storage (Android 10+) et compatibilité avec les versions antérieures pour l'écriture dans Documents.
