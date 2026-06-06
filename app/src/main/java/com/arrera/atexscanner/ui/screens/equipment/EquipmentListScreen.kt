@@ -592,7 +592,7 @@ fun EquipmentEditDialog(
                             expanded = expandedGr,
                             onDismissRequest = { expandedGr = false }
                         ) {
-                            listOf("IIA", "IIB", "IIC", "IIIA", "IIIB", "IIIC").forEach { option ->
+                            listOf("II", "IIA", "IIB", "IIC", "IIIA", "IIIB", "IIIC").forEach { option ->
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
