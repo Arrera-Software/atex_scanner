@@ -12,9 +12,7 @@ import org.apache.poi.ss.usermodel.*
 import org.apache.poi.ss.util.CellRangeAddress
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -50,39 +48,55 @@ class ExcelExporter(private val context: Context) {
 
         // --- En-têtes (Lignes 1 et 2) ---
         val row1 = sheet.createRow(0)
-        row1.heightInPoints = 40f
+        row1.heightInPoints = 45f
         createCell(row1, 0, "N°", headerStyle)
         createCell(row1, 1, "LOCALISATION", headerStyle)
         sheet.addMergedRegion(CellRangeAddress(0, 0, 1, 3))
+        
         createCell(row1, 4, "Zone ATEX\ndéfinie par le\nclient", headerStyle)
-        createCell(row1, 5, "Matériel", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(0, 0, 5, 10))
-        createCell(row1, 11, "Marquage", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(0, 0, 11, 18))
-        createCell(row1, 19, "Conformité", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(0, 0, 19, 21))
-        createCell(row1, 22, "Action corrective proposée", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 4, 6))
+        
+        createCell(row1, 7, "Matériel", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 7, 12))
+        
+        createCell(row1, 13, "Marquage", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 13, 21)) // Directives (3) + Normes (4) + Attestation (2) = 9 cols
+        
+        createCell(row1, 22, "Conformité", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(0, 0, 22, 24))
+        
+        createCell(row1, 25, "Action corrective proposée", headerStyle)
 
         val row2 = sheet.createRow(1)
         row2.heightInPoints = 30f
         createCell(row2, 1, "Section", headerStyle)
         createCell(row2, 2, "Sous-section", headerStyle)
         createCell(row2, 3, "Nom Zone", headerStyle)
-        createCell(row2, 5, "N° TAG", headerStyle)
-        createCell(row2, 6, "Type", headerStyle)
-        createCell(row2, 7, "Fabricant", headerStyle)
-        createCell(row2, 8, "Numéro de série", headerStyle)
-        createCell(row2, 9, "Indice de Protection", headerStyle)
-        createCell(row2, 10, "Année de Fab.", headerStyle)
-        createCell(row2, 11, "Selon Directives", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(1, 1, 11, 12))
-        createCell(row2, 13, "Selon normes", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(1, 1, 13, 16))
-        createCell(row2, 17, "N° attestation", headerStyle)
-        sheet.addMergedRegion(CellRangeAddress(1, 1, 17, 18))
-        createCell(row2, 19, "Conformité\nC/NA/SO/NE\n(*)", headerStyle)
-        createCell(row2, 20, "Type d'observation", headerStyle)
-        createCell(row2, 21, "Nature des observations", headerStyle)
+        
+        // Zone ATEX (3 colonnes : Classif | Groupe | Temp)
+        createCell(row2, 4, "", headerStyle)
+        createCell(row2, 5, "", headerStyle)
+        createCell(row2, 6, "", headerStyle)
+        
+        createCell(row2, 7, "N° TAG", headerStyle)
+        createCell(row2, 8, "Type", headerStyle)
+        createCell(row2, 9, "Fabricant", headerStyle)
+        createCell(row2, 10, "Numéro de série", headerStyle)
+        createCell(row2, 11, "Indice de Protection", headerStyle)
+        createCell(row2, 12, "Année de Fab.", headerStyle)
+        
+        createCell(row2, 13, "Selon Directives", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(1, 1, 13, 15)) // Divisé en 3 colonnes (Gr | Cat | Atmo)
+        
+        createCell(row2, 16, "Selon normes", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(1, 1, 16, 19)) // Divisé en 4 colonnes (Prot | Gr | Temp | EPL)
+        
+        createCell(row2, 20, "N° attestation", headerStyle)
+        sheet.addMergedRegion(CellRangeAddress(1, 1, 20, 21))
+        
+        createCell(row2, 22, "Conformité\nC/NA/SO/NE\n(*)", headerStyle)
+        createCell(row2, 23, "Type d'observation", headerStyle)
+        createCell(row2, 24, "Nature des observations", headerStyle)
 
         // --- Données ---
         var currentRow = 2
@@ -96,38 +110,41 @@ class ExcelExporter(private val context: Context) {
             createCell(dataRow, 2, zone?.sousSection ?: "", cellStyle)
             createCell(dataRow, 3, zone?.nom ?: "", cellStyle)
 
-            val zoneInfo = if (zone != null) {
-                "${zone.typeAtmosphere}\nZone ${zone.exigenceClassification}\n${zone.exigenceGroupe}\n${zone.exigenceTemperature}"
-            } else ""
-            createCell(dataRow, 4, zoneInfo, cellStyle)
+            // Zone ATEX découpée
+            createCell(dataRow, 4, zone?.exigenceClassification ?: "", cellStyle)
+            createCell(dataRow, 5, zone?.exigenceGroupe ?: "", cellStyle)
+            createCell(dataRow, 6, zone?.exigenceTemperature ?: "", cellStyle)
 
-            createCell(dataRow, 5, equip.tagNumber, cellStyle)
-            createCell(dataRow, 6, equip.typeMateriel, cellStyle)
-            createCell(dataRow, 7, equip.fabricant, cellStyle)
-            createCell(dataRow, 8, equip.numeroSerie, cellStyle)
-            createCell(dataRow, 9, equip.indiceProtection, cellStyle)
-            createCell(dataRow, 10, equip.anneeFabrication, cellStyle)
+            createCell(dataRow, 7, equip.tagNumber, cellStyle)
+            createCell(dataRow, 8, equip.typeMateriel, cellStyle)
+            createCell(dataRow, 9, equip.fabricant, cellStyle)
+            createCell(dataRow, 10, equip.numeroSerie, cellStyle)
+            createCell(dataRow, 11, equip.indiceProtection, cellStyle)
+            createCell(dataRow, 12, equip.anneeFabrication, cellStyle)
 
-            val dirInfo = "${equip.dirGroupe} ${equip.dirCategorie}${equip.dirAtmosphere}"
-            createCell(dataRow, 11, dirInfo, cellStyle)
-            sheet.addMergedRegion(CellRangeAddress(currentRow - 1, currentRow - 1, 11, 12))
+            // Selon Directives (Gr | Cat | Atmo) - Ex: II | 2 | G
+            createCell(dataRow, 13, equip.dirGroupe, cellStyle)
+            createCell(dataRow, 14, equip.dirCategorie, cellStyle)
+            createCell(dataRow, 15, equip.dirAtmosphere, cellStyle)
 
-            val normInfo = "${equip.normeProtection} ${equip.normeGroupe} ${equip.normeTemperature} ${equip.normeEPL}"
-            createCell(dataRow, 13, normInfo, cellStyle)
-            sheet.addMergedRegion(CellRangeAddress(currentRow - 1, currentRow - 1, 13, 16))
+            // Selon Normes (Prot | Groupe | Temp | EPL)
+            createCell(dataRow, 16, equip.normeProtection, cellStyle)
+            createCell(dataRow, 17, equip.normeGroupe, cellStyle)
+            createCell(dataRow, 18, equip.normeTemperature, cellStyle)
+            createCell(dataRow, 19, equip.normeEPL, cellStyle)
 
-            createCell(dataRow, 17, equip.numeroAttestation, cellStyle)
-            sheet.addMergedRegion(CellRangeAddress(currentRow - 1, currentRow - 1, 17, 18))
+            createCell(dataRow, 20, equip.numeroAttestation, cellStyle)
+            sheet.addMergedRegion(CellRangeAddress(currentRow - 1, currentRow - 1, 20, 21))
 
-            createCell(dataRow, 19, "", cellStyle)
-            createCell(dataRow, 20, "", cellStyle)
-            createCell(dataRow, 21, "", cellStyle)
             createCell(dataRow, 22, "", cellStyle)
+            createCell(dataRow, 23, "", cellStyle)
+            createCell(dataRow, 24, "", cellStyle)
+            createCell(dataRow, 25, "", cellStyle)
         }
 
         // Ajustement des colonnes
-        for (i in 0..22) {
-            sheet.setColumnWidth(i, 18 * 256)
+        for (i in 0..25) {
+            sheet.setColumnWidth(i, 11 * 256)
         }
 
         // Sauvegarde Excel et ZIP
