@@ -12,6 +12,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -42,6 +45,13 @@ fun OcrResultScreen(
     var showFullScreenImage by remember { mutableStateOf(false) }
     var showProtKeyboard by remember { mutableStateOf(false) }
     var showEplKeyboard by remember { mutableStateOf(false) }
+    var showAttestationPopup by remember { mutableStateOf(false) }
+
+    val attestations by if (viewModel.currentSiteId != null) {
+        viewModel.getUniqueAttestationsBySite(viewModel.currentSiteId!!).collectAsState()
+    } else {
+        remember { mutableStateOf(emptyList<String>()) }
+    }
 
     Scaffold(
         topBar = {
@@ -337,10 +347,31 @@ fun OcrResultScreen(
 
             OutlinedTextField(
                 value = equipment.numeroAttestation,
-                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it)) },
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it.uppercase())) },
                 label = { Text("N° de certificat / Attestation") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    keyboardType = KeyboardType.Ascii
+                )
             )
+
+            if (attestations.isNotEmpty()) {
+                Text("Certificats déjà utilisés sur ce site :", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(attestations) { att ->
+                        AssistChip(
+                            onClick = { viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = att)) },
+                            label = { Text(att) },
+                            leadingIcon = { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = {
@@ -386,6 +417,116 @@ fun OcrResultScreen(
             }
         )
     }
+
+    if (showAttestationPopup) {
+        AttestationPopupDialog(
+            initialValue = equipment.numeroAttestation,
+            suggestions = attestations,
+            onDismiss = { showAttestationPopup = false },
+            onConfirm = { 
+                viewModel.updatePendingEquipement(equipment.copy(numeroAttestation = it))
+                showAttestationPopup = false
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AttestationPopupDialog(
+    initialValue: String,
+    suggestions: List<String>,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var textValue by remember { mutableStateOf(initialValue) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Numéro de certificat / Attestation") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = textValue,
+                    onValueChange = { textValue = it.uppercase() },
+                    label = { Text("Taper le numéro") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Ascii
+                    ),
+                    trailingIcon = {
+                        if (textValue.isNotEmpty()) {
+                            IconButton(onClick = { textValue = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Effacer")
+                            }
+                        }
+                    }
+                )
+
+                if (suggestions.isNotEmpty()) {
+                    Text(
+                        "Certificats déjà utilisés sur ce site :",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    val filteredSuggestions = suggestions.filter { 
+                        it.contains(textValue, ignoreCase = true) && it != textValue 
+                    }
+
+                    Box(modifier = Modifier.heightIn(max = 180.dp)) {
+                        val scrollState = rememberScrollState()
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(scrollState)
+                                .fillMaxWidth()
+                        ) {
+                            (if (textValue.isEmpty()) suggestions else filteredSuggestions).forEach { suggestion ->
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { textValue = suggestion },
+                                    color = Color.Transparent
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = suggestion,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(textValue) }) {
+                Text("Valider")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @Composable

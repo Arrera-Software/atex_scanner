@@ -30,6 +30,8 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
     var pendingEquipement by mutableStateOf<Equipement?>(null)
         private set
 
+    var currentSiteId by mutableStateOf<Long?>(null)
+
     var isExporting by mutableStateOf(false)
         private set
 
@@ -140,6 +142,14 @@ class MainViewModel(private val repository: ScannerRepository, private val ocrPr
     // Récupérer les équipements d'une zone
     fun getEquipementsByZone(zoneId: Long): StateFlow<List<Equipement>> {
         return repository.getEquipementsByZone(zoneId).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
+
+    fun getUniqueAttestationsBySite(siteId: Long): StateFlow<List<String>> {
+        return repository.getUniqueAttestationsBySite(siteId).stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()

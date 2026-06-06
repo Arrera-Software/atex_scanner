@@ -44,6 +44,9 @@ interface ScannerDao {
     @Query("SELECT * FROM equipements WHERE zoneId IN (SELECT id FROM zones_atex WHERE siteId = :siteId)")
     suspend fun getEquipementsBySite(siteId: Long): List<Equipement>
 
+    @Query("SELECT DISTINCT numeroAttestation FROM equipements WHERE zoneId IN (SELECT id FROM zones_atex WHERE siteId = :siteId) AND numeroAttestation != ''")
+    fun getUniqueAttestationsBySite(siteId: Long): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInspection(inspection: Inspection): Long
 

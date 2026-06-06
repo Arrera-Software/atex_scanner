@@ -58,9 +58,11 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 viewModel = viewModel,
                                 onSiteClick = { site ->
+                                    viewModel.currentSiteId = site.id
                                     navController.navigate("zones/${site.id}/${site.nom}")
                                 },
                                 onSiteAdded = { id, name ->
+                                    viewModel.currentSiteId = id
                                     navController.navigate("zones/$id/$name")
                                 }
                             )

@@ -16,12 +16,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,12 +35,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import androidx.compose.material.icons.automirrored.filled.Backspace
-import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.foundation.BorderStroke
 import coil.compose.AsyncImage
 import com.arrera.atexscanner.data.Equipement
@@ -59,6 +60,12 @@ fun EquipmentListScreen(
     
     val zoneFlow = remember(zoneId) { viewModel.getZoneById(zoneId) }
     val zone by zoneFlow.collectAsState()
+
+    LaunchedEffect(zone) {
+        zone?.let {
+            viewModel.currentSiteId = it.siteId
+        }
+    }
     
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp
@@ -247,6 +254,7 @@ fun EquipmentListScreen(
         )
         EquipmentEditDialog(
             equipment = newEquipment,
+            viewModel = viewModel,
             onDismiss = { showManualAddDialog = false },
             onConfirm = { updatedEquip ->
                 viewModel.addEquipement(updatedEquip)
@@ -260,6 +268,7 @@ fun EquipmentListScreen(
     if (equipmentToEdit != null) {
         EquipmentEditDialog(
             equipment = equipmentToEdit!!,
+            viewModel = viewModel,
             onDismiss = { equipmentToEdit = null },
             onConfirm = { updatedEquip ->
                 viewModel.updateEquipement(updatedEquip)
@@ -309,6 +318,7 @@ fun EquipmentListScreen(
 @Composable
 fun EquipmentEditDialog(
     equipment: Equipement,
+    viewModel: MainViewModel,
     onDismiss: () -> Unit,
     onConfirm: (Equipement) -> Unit,
     onDelete: () -> Unit,
@@ -334,6 +344,13 @@ fun EquipmentEditDialog(
     
     var showProtKeyboard by remember { mutableStateOf(false) }
     var showEplKeyboard by remember { mutableStateOf(false) }
+    var showAttestationPopup by remember { mutableStateOf(false) }
+
+    val attestations by if (viewModel.currentSiteId != null) {
+        viewModel.getUniqueAttestationsBySite(viewModel.currentSiteId!!).collectAsState(initial = emptyList())
+    } else {
+        remember { mutableStateOf(emptyList<String>()) }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -624,7 +641,7 @@ fun EquipmentEditDialog(
                                 )
                             }
                         }
-                                    }
+                    }
                     OutlinedTextField(
                         value = normEPL, 
                         onValueChange = {}, 
@@ -640,11 +657,49 @@ fun EquipmentEditDialog(
                     )
                 }
                 
-                OutlinedTextField(value = attestation, onValueChange = { attestation = it }, label = { Text("N° de certificat / Attestation") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = attestation, 
+                    onValueChange = { attestation = it.uppercase() }, 
+                    label = { Text("N° de certificat / Attestation") }, 
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Ascii
+                    )
+                )
+
+                if (attestations.isNotEmpty()) {
+                    Text("Certificats déjà utilisés sur ce site :", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp)
+                    ) {
+                        items(attestations) { att ->
+                            AssistChip(
+                                onClick = { attestation = att },
+                                label = { Text(att) },
+                                leadingIcon = { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            )
+                        }
+                    }
+                }
                 
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showAttestationPopup) {
+        AttestationPopupDialog(
+            initialValue = attestation,
+            suggestions = attestations,
+            onDismiss = { showAttestationPopup = false },
+            onConfirm = { 
+                attestation = it
+                showAttestationPopup = false
+            }
+        )
     }
 
     if (showProtKeyboard) {
@@ -670,6 +725,104 @@ fun EquipmentEditDialog(
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AttestationPopupDialog(
+    initialValue: String,
+    suggestions: List<String>,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var textValue by remember { mutableStateOf(initialValue) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Numéro de certificat / Attestation") },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = textValue,
+                    onValueChange = { textValue = it.uppercase() },
+                    label = { Text("Taper le numéro") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Characters,
+                        keyboardType = KeyboardType.Ascii
+                    ),
+                    trailingIcon = {
+                        if (textValue.isNotEmpty()) {
+                            IconButton(onClick = { textValue = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Effacer")
+                            }
+                        }
+                    }
+                )
+
+                if (suggestions.isNotEmpty()) {
+                    Text(
+                        "Certificats déjà utilisés sur ce site :",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    val filteredSuggestions = suggestions.filter { 
+                        it.contains(textValue, ignoreCase = true) && it != textValue 
+                    }
+
+                    Box(modifier = Modifier.heightIn(max = 180.dp)) {
+                        val scrollState = rememberScrollState()
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(scrollState)
+                                .fillMaxWidth()
+                        ) {
+                            (if (textValue.isEmpty()) suggestions else filteredSuggestions).forEach { suggestion ->
+                                Surface(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { textValue = suggestion },
+                                    color = Color.Transparent
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            text = suggestion,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
+                                }
+                                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(textValue) }) {
+                Text("Valider")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    )
 }
 
 @Composable

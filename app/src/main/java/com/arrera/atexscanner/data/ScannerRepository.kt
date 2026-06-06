@@ -45,6 +45,10 @@ class ScannerRepository(private val scannerDao: ScannerDao) {
         return scannerDao.getEquipementsBySite(siteId)
     }
 
+    fun getUniqueAttestationsBySite(siteId: Long): Flow<List<String>> {
+        return scannerDao.getUniqueAttestationsBySite(siteId)
+    }
+
     suspend fun insertEquipement(equipement: Equipement): Long {
         return scannerDao.insertEquipement(equipement)
     }

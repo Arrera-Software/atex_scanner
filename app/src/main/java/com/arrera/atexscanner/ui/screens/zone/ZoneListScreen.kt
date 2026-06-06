@@ -37,6 +37,10 @@ fun ZoneListScreen(
     val zonesFlow = remember(siteId) { viewModel.getZonesBySite(siteId) }
     val zones by zonesFlow.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(siteId) {
+        viewModel.currentSiteId = siteId
+    }
     
     var showAddDialog by remember { mutableStateOf(false) }
     var zoneToEdit by remember { mutableStateOf<ZoneAtex?>(null) }
