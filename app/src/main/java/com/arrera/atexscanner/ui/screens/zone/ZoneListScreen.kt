@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,10 +43,10 @@ fun ZoneListScreen(
         viewModel.currentSiteId = siteId
     }
     
-    var showAddDialog by remember { mutableStateOf(false) }
-    var zoneToEdit by remember { mutableStateOf<ZoneAtex?>(null) }
-    var zoneToDelete by remember { mutableStateOf<ZoneAtex?>(null) }
-    var showDeleteSiteDialog by remember { mutableStateOf(false) }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    var zoneToEdit by rememberSaveable { mutableStateOf<ZoneAtex?>(null) }
+    var zoneToDelete by rememberSaveable { mutableStateOf<ZoneAtex?>(null) }
+    var showDeleteSiteDialog by rememberSaveable { mutableStateOf(false) }
     
     Scaffold(
         topBar = {
@@ -264,13 +265,13 @@ fun ZoneDialog(
     onConfirm: (String, String, String, String, String, String, String) -> Unit,
     onDelete: (() -> Unit)? = null
 ) {
-    var zoneNom by remember { mutableStateOf(initialNom) }
-    var section by remember { mutableStateOf(initialSection) }
-    var sousSection by remember { mutableStateOf(initialSousSection) }
-    var typeAtmo by remember { mutableStateOf(initialTypeAtmo) }
-    var classification by remember { mutableStateOf(if (typeAtmo == "Gaz") initialClassification.ifEmpty { "2" } else initialClassification.ifEmpty { "22" }) }
-    var groupe by remember { mutableStateOf(if (typeAtmo == "Gaz") initialGroupe.ifEmpty { "IIB" } else initialGroupe.ifEmpty { "IIIB" }) }
-    var temperature by remember { mutableStateOf(if (typeAtmo == "Gaz") initialTemp.ifEmpty { "T4" } else initialTemp) }
+    var zoneNom by rememberSaveable { mutableStateOf(initialNom) }
+    var section by rememberSaveable { mutableStateOf(initialSection) }
+    var sousSection by rememberSaveable { mutableStateOf(initialSousSection) }
+    var typeAtmo by rememberSaveable { mutableStateOf(initialTypeAtmo) }
+    var classification by rememberSaveable { mutableStateOf(if (typeAtmo == "Gaz") initialClassification.ifEmpty { "2" } else initialClassification.ifEmpty { "22" }) }
+    var groupe by rememberSaveable { mutableStateOf(if (typeAtmo == "Gaz") initialGroupe.ifEmpty { "IIB" } else initialGroupe.ifEmpty { "IIIB" }) }
+    var temperature by rememberSaveable { mutableStateOf(if (typeAtmo == "Gaz") initialTemp.ifEmpty { "T4" } else initialTemp) }
 
     val typeAtmoOptions = listOf("Gaz", "Poussière")
     
@@ -458,7 +459,7 @@ fun AtexDropdown(
     onOptionSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,

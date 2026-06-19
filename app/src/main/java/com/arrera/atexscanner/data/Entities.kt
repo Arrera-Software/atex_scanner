@@ -1,16 +1,20 @@
 package com.arrera.atexscanner.data
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 
+@Parcelize
 @Entity(tableName = "sites")
 data class Site(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val nom: String,
     val dateCreation: Long = System.currentTimeMillis()
-)
+) : Parcelable
 
+@Parcelize
 @Entity(
     tableName = "zones_atex",
     foreignKeys = [
@@ -32,8 +36,9 @@ data class ZoneAtex(
     val exigenceClassification: String = "2",
     val exigenceGroupe: String = "IIB",
     val exigenceTemperature: String = "T4"
-)
+) : Parcelable
 
+@Parcelize
 @Entity(
     tableName = "equipements",
     foreignKeys = [
@@ -70,8 +75,9 @@ data class Equipement(
     
     val numeroAttestation: String = "",
     val photoPlaquePath: String? = null
-)
+) : Parcelable
 
+@Parcelize
 @Entity(
     tableName = "inspections",
     foreignKeys = [
@@ -100,4 +106,4 @@ data class Inspection(
     val gainesCables: String = "Conforme",
     val boitierEnveloppe: String = "Conforme",
     val autres: String = ""
-)
+) : Parcelable

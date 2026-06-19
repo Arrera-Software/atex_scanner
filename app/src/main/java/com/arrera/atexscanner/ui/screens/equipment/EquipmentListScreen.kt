@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -76,14 +77,14 @@ fun EquipmentListScreen(
         else -> 1
     }
 
-    var showTagDialog by remember { mutableStateOf(false) }
-    var showSourceDialog by remember { mutableStateOf(false) }
-    var equipmentTag by remember { mutableStateOf("") }
+    var showTagDialog by rememberSaveable { mutableStateOf(false) }
+    var showSourceDialog by rememberSaveable { mutableStateOf(false) }
+    var equipmentTag by rememberSaveable { mutableStateOf("") }
     
-    var equipmentToEdit by remember { mutableStateOf<Equipement?>(null) }
-    var equipmentToDelete by remember { mutableStateOf<Equipement?>(null) }
-    var fullScreenImagePath by remember { mutableStateOf<String?>(null) }
-    var showManualAddDialog by remember { mutableStateOf(false) }
+    var equipmentToEdit by rememberSaveable { mutableStateOf<Equipement?>(null) }
+    var equipmentToDelete by rememberSaveable { mutableStateOf<Equipement?>(null) }
+    var fullScreenImagePath by rememberSaveable { mutableStateOf<String?>(null) }
+    var showManualAddDialog by rememberSaveable { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -324,27 +325,27 @@ fun EquipmentEditDialog(
     onDelete: () -> Unit,
     onImageClick: (String) -> Unit
 ) {
-    var tag by remember { mutableStateOf(equipment.tagNumber) }
-    var fabricant by remember { mutableStateOf(equipment.fabricant) }
-    var type by remember { mutableStateOf(equipment.typeMateriel) }
-    var sn by remember { mutableStateOf(equipment.numeroSerie) }
-    var ip by remember { mutableStateOf(if (equipment.indiceProtection.startsWith("IP")) equipment.indiceProtection else "IP") }
-    var annee by remember { mutableStateOf(equipment.anneeFabrication) }
+    var tag by rememberSaveable { mutableStateOf(equipment.tagNumber) }
+    var fabricant by rememberSaveable { mutableStateOf(equipment.fabricant) }
+    var type by rememberSaveable { mutableStateOf(equipment.typeMateriel) }
+    var sn by rememberSaveable { mutableStateOf(equipment.numeroSerie) }
+    var ip by rememberSaveable { mutableStateOf(if (equipment.indiceProtection.startsWith("IP")) equipment.indiceProtection else "IP") }
+    var annee by rememberSaveable { mutableStateOf(equipment.anneeFabrication) }
     
-    var attestation by remember { mutableStateOf(equipment.numeroAttestation) }
+    var attestation by rememberSaveable { mutableStateOf(equipment.numeroAttestation) }
 
-    var dirGr by remember { mutableStateOf(equipment.dirGroupe) }
-    var dirCat by remember { mutableStateOf(equipment.dirCategorie) }
-    var dirAtmo by remember { mutableStateOf(equipment.dirAtmosphere) }
+    var dirGr by rememberSaveable { mutableStateOf(equipment.dirGroupe) }
+    var dirCat by rememberSaveable { mutableStateOf(equipment.dirCategorie) }
+    var dirAtmo by rememberSaveable { mutableStateOf(equipment.dirAtmosphere) }
     
-    var normProt by remember { mutableStateOf(equipment.normeProtection) }
-    var normGr by remember { mutableStateOf(equipment.normeGroupe) }
-    var normT by remember { mutableStateOf(equipment.normeTemperature) }
-    var normEPL by remember { mutableStateOf(equipment.normeEPL) }
+    var normProt by rememberSaveable { mutableStateOf(equipment.normeProtection) }
+    var normGr by rememberSaveable { mutableStateOf(equipment.normeGroupe) }
+    var normT by rememberSaveable { mutableStateOf(equipment.normeTemperature) }
+    var normEPL by rememberSaveable { mutableStateOf(equipment.normeEPL) }
     
-    var showProtKeyboard by remember { mutableStateOf(false) }
-    var showEplKeyboard by remember { mutableStateOf(false) }
-    var showAttestationPopup by remember { mutableStateOf(false) }
+    var showProtKeyboard by rememberSaveable { mutableStateOf(false) }
+    var showEplKeyboard by rememberSaveable { mutableStateOf(false) }
+    var showAttestationPopup by rememberSaveable { mutableStateOf(false) }
 
     val attestations by if (viewModel.currentSiteId != null) {
         viewModel.getUniqueAttestationsBySite(viewModel.currentSiteId!!).collectAsState(initial = emptyList())
@@ -565,11 +566,13 @@ fun EquipmentEditDialog(
                         label = { Text("Prot") }, 
                         modifier = Modifier.weight(1f).clickable { showProtKeyboard = true },
                         readOnly = true,
-                        enabled = false,
+                        enabled = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
                     
@@ -648,11 +651,13 @@ fun EquipmentEditDialog(
                         label = { Text("EPL") }, 
                         modifier = Modifier.weight(1f).clickable { showEplKeyboard = true },
                         readOnly = true,
-                        enabled = false,
+                        enabled = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
                 }
@@ -735,7 +740,7 @@ fun AttestationPopupDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var textValue by remember { mutableStateOf(initialValue) }
+    var textValue by rememberSaveable { mutableStateOf(initialValue) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -848,7 +853,7 @@ fun AtexKeyboardDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var currentValue by remember { mutableStateOf(initialValue) }
+    var currentValue by rememberSaveable { mutableStateOf(initialValue) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

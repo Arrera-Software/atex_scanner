@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,10 +43,10 @@ fun OcrResultScreen(
         return
     }
 
-    var showFullScreenImage by remember { mutableStateOf(false) }
-    var showProtKeyboard by remember { mutableStateOf(false) }
-    var showEplKeyboard by remember { mutableStateOf(false) }
-    var showAttestationPopup by remember { mutableStateOf(false) }
+    var showFullScreenImage by rememberSaveable { mutableStateOf(false) }
+    var showProtKeyboard by rememberSaveable { mutableStateOf(false) }
+    var showEplKeyboard by rememberSaveable { mutableStateOf(false) }
+    var showAttestationPopup by rememberSaveable { mutableStateOf(false) }
 
     val attestations by if (viewModel.currentSiteId != null) {
         viewModel.getUniqueAttestationsBySite(viewModel.currentSiteId!!).collectAsState()
@@ -252,11 +253,13 @@ fun OcrResultScreen(
                     label = { Text("Prot.") },
                     modifier = Modifier.weight(1f).clickable { showProtKeyboard = true },
                     readOnly = true,
-                    enabled = false,
+                    enabled = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
                 
@@ -336,11 +339,13 @@ fun OcrResultScreen(
                     label = { Text("EPL") },
                     modifier = Modifier.weight(1f).clickable { showEplKeyboard = true },
                     readOnly = true,
-                    enabled = false,
+                    enabled = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedBorderColor = MaterialTheme.colorScheme.outline,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
             }
@@ -439,7 +444,7 @@ fun AttestationPopupDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var textValue by remember { mutableStateOf(initialValue) }
+    var textValue by rememberSaveable { mutableStateOf(initialValue) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -552,7 +557,7 @@ fun AtexKeyboardDialog(
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
-    var currentValue by remember { mutableStateOf(initialValue) }
+    var currentValue by rememberSaveable { mutableStateOf(initialValue) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

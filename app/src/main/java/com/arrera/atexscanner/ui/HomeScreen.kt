@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -26,8 +27,8 @@ fun HomeScreen(
     onSiteAdded: (Long, String) -> Unit
 ) {
     val sites by viewModel.allSites.collectAsState()
-    var showAddDialog by remember { mutableStateOf(false) }
-    var newSiteName by remember { mutableStateOf("") }
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    var newSiteName by rememberSaveable { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
     Scaffold(
