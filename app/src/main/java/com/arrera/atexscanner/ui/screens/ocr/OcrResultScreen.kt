@@ -38,10 +38,14 @@ fun OcrResultScreen(
     onSave: () -> Unit
 ) {
     val equipment = viewModel.pendingEquipement
-    if (equipment == null) {
-        onBack()
-        return
+    
+    LaunchedEffect(equipment) {
+        if (equipment == null) {
+            onBack()
+        }
     }
+
+    if (equipment == null) return
 
     var showFullScreenImage by rememberSaveable { mutableStateOf(false) }
     var showProtKeyboard by rememberSaveable { mutableStateOf(false) }
@@ -247,21 +251,25 @@ fun OcrResultScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
             Text("Marquage Normes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = equipment.normeProtection,
-                    onValueChange = {},
-                    label = { Text("Prot.") },
-                    modifier = Modifier.weight(1f).clickable { showProtKeyboard = true },
-                    readOnly = true,
-                    enabled = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        focusedBorderColor = MaterialTheme.colorScheme.outline,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = equipment.normeProtection,
+                        onValueChange = {},
+                        label = { Text("Prot.") },
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true,
+                        enabled = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
-                )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showProtKeyboard = true }
+                    )
+                }
                 
                 var expandedGr by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
@@ -333,21 +341,25 @@ fun OcrResultScreen(
                         }
                     }
                 }
-                OutlinedTextField(
-                    value = equipment.normeEPL,
-                    onValueChange = {},
-                    label = { Text("EPL") },
-                    modifier = Modifier.weight(1f).clickable { showEplKeyboard = true },
-                    readOnly = true,
-                    enabled = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        focusedBorderColor = MaterialTheme.colorScheme.outline,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = equipment.normeEPL,
+                        onValueChange = {},
+                        label = { Text("EPL") },
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true,
+                        enabled = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
-                )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showEplKeyboard = true }
+                    )
+                }
             }
 
             OutlinedTextField(
@@ -359,6 +371,16 @@ fun OcrResultScreen(
                     capitalization = KeyboardCapitalization.Characters,
                     keyboardType = KeyboardType.Ascii
                 )
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            Text("Observations", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+            OutlinedTextField(
+                value = equipment.commentaire,
+                onValueChange = { viewModel.updatePendingEquipement(equipment.copy(commentaire = it)) },
+                label = { Text("Commentaire / Observation") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
             )
 
             if (attestations.isNotEmpty()) {

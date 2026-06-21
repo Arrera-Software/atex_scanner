@@ -119,7 +119,8 @@ class ExcelExporter(private val context: Context) {
             createCell(dataRow, 8, equip.typeMateriel, cellStyle)
             createCell(dataRow, 9, equip.fabricant, cellStyle)
             createCell(dataRow, 10, equip.numeroSerie, cellStyle)
-            createCell(dataRow, 11, equip.indiceProtection, cellStyle)
+            val ipDisplay = if (equip.indiceProtection.filter { it.isDigit() }.isEmpty()) "" else equip.indiceProtection
+            createCell(dataRow, 11, ipDisplay, cellStyle)
             createCell(dataRow, 12, equip.anneeFabrication, cellStyle)
 
             // Selon Directives (Gr | Cat | Atmo) - Ex: II | 2 | G
@@ -138,7 +139,7 @@ class ExcelExporter(private val context: Context) {
 
             createCell(dataRow, 22, "", cellStyle)
             createCell(dataRow, 23, "", cellStyle)
-            createCell(dataRow, 24, "", cellStyle)
+            createCell(dataRow, 24, equip.commentaire, cellStyle)
             createCell(dataRow, 25, "", cellStyle)
         }
 

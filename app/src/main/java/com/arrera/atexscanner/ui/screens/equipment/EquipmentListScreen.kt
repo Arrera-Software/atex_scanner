@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Edit
@@ -82,6 +83,7 @@ fun EquipmentListScreen(
     var equipmentTag by rememberSaveable { mutableStateOf("") }
     
     var equipmentToEdit by rememberSaveable { mutableStateOf<Equipement?>(null) }
+    var equipmentToDuplicate by rememberSaveable { mutableStateOf<Equipement?>(null) }
     var equipmentToDelete by rememberSaveable { mutableStateOf<Equipement?>(null) }
     var fullScreenImagePath by rememberSaveable { mutableStateOf<String?>(null) }
     var showManualAddDialog by rememberSaveable { mutableStateOf(false) }
@@ -146,7 +148,8 @@ fun EquipmentListScreen(
                     items(equipments) { equipment ->
                         EquipmentCard(
                             equipment = equipment,
-                            onEdit = { equipmentToEdit = equipment }
+                            onEdit = { equipmentToEdit = equipment },
+                            onDuplicate = { equipmentToDuplicate = equipment }
                         )
                     }
                 }
@@ -266,6 +269,20 @@ fun EquipmentListScreen(
         )
     }
 
+    if (equipmentToDuplicate != null) {
+        EquipmentEditDialog(
+            equipment = equipmentToDuplicate!!.copy(id = 0L),
+            viewModel = viewModel,
+            onDismiss = { equipmentToDuplicate = null },
+            onConfirm = { newEquip ->
+                viewModel.addEquipement(newEquip)
+                equipmentToDuplicate = null
+            },
+            onDelete = { equipmentToDuplicate = null },
+            onImageClick = { path -> fullScreenImagePath = path }
+        )
+    }
+
     if (equipmentToEdit != null) {
         EquipmentEditDialog(
             equipment = equipmentToEdit!!,
@@ -342,6 +359,7 @@ fun EquipmentEditDialog(
     var normGr by rememberSaveable { mutableStateOf(equipment.normeGroupe) }
     var normT by rememberSaveable { mutableStateOf(equipment.normeTemperature) }
     var normEPL by rememberSaveable { mutableStateOf(equipment.normeEPL) }
+    var commentaire by rememberSaveable { mutableStateOf(equipment.commentaire) }
     
     var showProtKeyboard by rememberSaveable { mutableStateOf(false) }
     var showEplKeyboard by rememberSaveable { mutableStateOf(false) }
@@ -388,7 +406,8 @@ fun EquipmentEditDialog(
                                     normeProtection = normProt,
                                     normeGroupe = normGr,
                                     normeTemperature = normT,
-                                    normeEPL = normEPL
+                                    normeEPL = normEPL,
+                                    commentaire = commentaire
                                 ))
                             },
                             modifier = Modifier.padding(end = 8.dp)
@@ -560,21 +579,25 @@ fun EquipmentEditDialog(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Text("Marquage Normes", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = normProt, 
-                        onValueChange = {}, 
-                        label = { Text("Prot") }, 
-                        modifier = Modifier.weight(1f).clickable { showProtKeyboard = true },
-                        readOnly = true,
-                        enabled = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            focusedBorderColor = MaterialTheme.colorScheme.outline,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = normProt, 
+                            onValueChange = {}, 
+                            label = { Text("Prot") }, 
+                            modifier = Modifier.fillMaxWidth(),
+                            readOnly = true,
+                            enabled = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.outline,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
                         )
-                    )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showProtKeyboard = true }
+                        )
+                    }
                     
                     var expandedGr by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
@@ -645,21 +668,25 @@ fun EquipmentEditDialog(
                             }
                         }
                     }
-                    OutlinedTextField(
-                        value = normEPL, 
-                        onValueChange = {}, 
-                        label = { Text("EPL") }, 
-                        modifier = Modifier.weight(1f).clickable { showEplKeyboard = true },
-                        readOnly = true,
-                        enabled = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            focusedBorderColor = MaterialTheme.colorScheme.outline,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = normEPL, 
+                            onValueChange = {}, 
+                            label = { Text("EPL") }, 
+                            modifier = Modifier.fillMaxWidth(),
+                            readOnly = true,
+                            enabled = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.outline,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            )
                         )
-                    )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showEplKeyboard = true }
+                        )
+                    }
                 }
                 
                 OutlinedTextField(
@@ -671,6 +698,16 @@ fun EquipmentEditDialog(
                         capitalization = KeyboardCapitalization.Characters,
                         keyboardType = KeyboardType.Ascii
                     )
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                Text("Observations", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                OutlinedTextField(
+                    value = commentaire,
+                    onValueChange = { commentaire = it },
+                    label = { Text("Commentaire / Observation") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
                 )
 
                 if (attestations.isNotEmpty()) {
@@ -940,7 +977,11 @@ fun EmptyState() {
 }
 
 @Composable
-fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
+fun EquipmentCard(
+    equipment: Equipement, 
+    onEdit: () -> Unit,
+    onDuplicate: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -957,8 +998,13 @@ fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Modifier", tint = MaterialTheme.colorScheme.primary)
+                Row {
+                    IconButton(onClick = onDuplicate) {
+                        Icon(Icons.Default.ContentCopy, contentDescription = "Dupliquer", tint = MaterialTheme.colorScheme.primary)
+                    }
+                    IconButton(onClick = onEdit) {
+                        Icon(Icons.Default.Edit, contentDescription = "Modifier", tint = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
             
@@ -984,6 +1030,16 @@ fun EquipmentCard(equipment: Equipement, onEdit: () -> Unit) {
                 text = "${equipment.normeProtection} ${equipment.normeGroupe} ${equipment.normeTemperature} ${equipment.normeEPL}",
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            if (equipment.commentaire.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Observation", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Text(
+                    text = equipment.commentaire,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

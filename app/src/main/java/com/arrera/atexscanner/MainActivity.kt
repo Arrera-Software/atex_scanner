@@ -142,7 +142,10 @@ class MainActivity : ComponentActivity() {
     private fun checkAndRequestPermissions() {
         val permissions = mutableListOf(Manifest.permission.CAMERA)
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            permissions.add(Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
         } else {
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)

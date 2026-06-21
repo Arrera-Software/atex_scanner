@@ -74,7 +74,8 @@ data class Equipement(
     val normeEPL: String = "",
     
     val numeroAttestation: String = "",
-    val photoPlaquePath: String? = null
+    val photoPlaquePath: String? = null,
+    val commentaire: String = ""
 ) : Parcelable
 
 @Parcelize
